@@ -20,6 +20,14 @@ There are still many unknowns regarding microvasculature, but your Machine Learn
 For details see the [`pyproject.toml`](./pyproject.toml) file.
 We use [`poetry`](https://python-poetry.org/) as the python package manager.
 
+### Activate Virtual Environment
+
+If you are not using `conda` to manage virtual environments, `cd` into the project root [`./`](./) and run the following command.
+
+```bash
+$ poetry shell
+```
+
 ### Add Dependency
 
 ```bash
@@ -29,7 +37,7 @@ $ poetry add <PACKAGE_NAME>
 ### Install all Dependencies
 
 ```bash
-$ poetry Install
+$ poetry install
 ```
 
 ### Export as `requirements.txt`
