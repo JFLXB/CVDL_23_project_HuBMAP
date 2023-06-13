@@ -2,7 +2,12 @@
 name = "hubmap"
 version = "0.0.1"
 description = "HuBMAP - Hacking the Human Vasculature Segment instances of microvascular structures from healthy human kidney tissue slides."
-authors = ["Jonas Blenninger <jonas@blenninger.de>"]
+authors = [
+    "Jonas Blenninger <jonas@blenninger.de>",
+    "Christian Bernhard <christianbernhard089@gmail.com>",
+    "Batuhan Gül <gulbatu3@googlemail.com>",
+    "Thomas Ziereis <thomas.ziereis@gmail.com>"
+]
 readme = "README.md"
 
 [tool.poetry.dependencies]
