@@ -45,3 +45,5 @@ $ poetry install
 ```bash
 $ poetry export --without-hashes --format=requirements.txt > requirements.txt
 ```
+
+## References
