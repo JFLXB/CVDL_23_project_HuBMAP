@@ -28,7 +28,12 @@ def generate_mask(img_data):
     return mask
 
 
-
+# Dataset for all annotated images,
+# index operations return mask in the following format:
+# [mask_idx, h, w] where mask_dix coresponds to:
+# mask_idx: 0 => blood_vessel
+# mask_idx:1 => glomerulus
+# mask_idx:2 => unsure
 class BaseDataset(Dataset):
     def __init__(self, image_dir, transform=None):
         self.image_dir = image_dir
