@@ -5,26 +5,26 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import cv2
 import json
-import pandas as pd 
+import pandas as pd
 
 
 def generate_mask(img_data):
-    mask = np.zeros((512, 512,3), dtype=np.uint8)
+    mask = np.zeros((512, 512, 3), dtype=np.uint8)
 
     for group in img_data["annotations"]:
         coordinates = group["coordinates"][0]
         points = np.array(coordinates, dtype=np.int32)
         points = points.reshape((-1, 1, 2))
-        temp = np.zeros((512,512), dtype=np.uint8)
+        temp = np.zeros((512, 512), dtype=np.uint8)
         if group["type"] == "blood_vessel":
             cv2.fillPoly(temp, [points], color=(255))
-            mask[:,:,0] += temp
-        elif group['type'] == "glomerulus":
+            mask[:, :, 0] += temp
+        elif group["type"] == "glomerulus":
             cv2.fillPoly(temp, [points], color=(255))
-            mask[:,:,1] += temp
+            mask[:, :, 1] += temp
         else:
             cv2.fillPoly(temp, [points], color=(255))
-            mask[:,:,2] += temp
+            mask[:, :, 2] += temp
     return mask
 
 
@@ -42,9 +42,9 @@ class BaseDataset(Dataset):
         self.meta_df = pd.read_csv(f"{image_dir}/tile_meta.csv")
 
     def _load_polygons(self):
-        with open(f'{self.image_dir}/polygons.jsonl', 'r') as polygons:
+        with open(f"{self.image_dir}/polygons.jsonl", "r") as polygons:
             json_list = list(polygons)
-        tiles_dicts = [json.loads(json_str)for json_str in json_list]
+        tiles_dicts = [json.loads(json_str) for json_str in json_list]
         return tiles_dicts
 
     def plot_base(self, idx):
@@ -54,17 +54,19 @@ class BaseDataset(Dataset):
         image_path = f'{self.image_dir}/train/{img_data["id"]}.tif'
         image = Image.open(image_path)
 
-        legend_elements = [mpatches.Patch(color='green', label='glomerulus'),
-                           mpatches.Patch(color='red', label='blood vessel'),
-                           mpatches.Patch(color='yellow', label='unsure')]
+        legend_elements = [
+            mpatches.Patch(color="green", label="glomerulus"),
+            mpatches.Patch(color="red", label="blood vessel"),
+            mpatches.Patch(color="yellow", label="unsure"),
+        ]
 
         for entry in img_data["annotations"]:
-            if entry["type"] == 'glomerulus':
-                color = 'green'
-            elif entry["type"] == 'blood_vessel':
-                color = 'red'
+            if entry["type"] == "glomerulus":
+                color = "green"
+            elif entry["type"] == "blood_vessel":
+                color = "red"
             else:
-                color = 'yellow'
+                color = "yellow"
 
             sublist = entry["coordinates"][0]
             x = []
@@ -79,10 +81,10 @@ class BaseDataset(Dataset):
 
         plt.imshow(image)
         plt.title("Tile with annotations")
-        plt.legend(handles=legend_elements, loc='upper right')
+        plt.legend(handles=legend_elements, loc="upper right")
 
+    # plots a example after transformation i.e. the transformed image and all three masksk
 
-    #plots a example after transformation i.e. the transformed image and all three masksk
     def plot_example(self, idx):
         img, mask = self[idx]
         img = img.permute(1, 2, 0).numpy()
@@ -91,11 +93,11 @@ class BaseDataset(Dataset):
         fig, axs = plt.subplots(1, 4, figsize=(15, 5))
         axs[0].imshow(img)
         axs[0].set_title("Image")
-        axs[1].imshow(mask[:,:,0], cmap='gray')
+        axs[1].imshow(mask[:, :, 0], cmap="gray")
         axs[1].set_title("blood_vessel mask")
-        axs[2].imshow(mask[:,:,1], cmap='gray')
+        axs[2].imshow(mask[:, :, 1], cmap="gray")
         axs[2].set_title("glomerulus mask")
-        axs[3].imshow(mask[:,:,2], cmap='gray')
+        axs[3].imshow(mask[:, :, 2], cmap="gray")
         axs[3].set_title("unsure mask")
 
         plt.tight_layout()
@@ -112,6 +114,6 @@ class BaseDataset(Dataset):
 
         if self.transform is not None:
             image = self.transform(image)
-            mask = self.transform(mask) 
-            
+            mask = self.transform(mask)
+
         return image, mask

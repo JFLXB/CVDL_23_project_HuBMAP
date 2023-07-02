@@ -163,3 +163,8 @@ cython_debug/
 .idea/
 
 poetry.lock
+
+# Data except for the init and gitkeep file
+!hubmap/data/__init__.py
+!hubmap/data/.gitkeep
+hubmap/data/**/*
