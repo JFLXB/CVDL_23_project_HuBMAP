@@ -23,8 +23,8 @@ class Resize:
         self.size = size
 
     def __call__(self, image, target):
-        image = F.resize(image, self.size)
-        target = F.resize(target, self.size)
+        image = F.resize(image, self.size, antialias=True)
+        target = F.resize(target, self.size, antialias=True)
         return image, target
 
 class RandomHorizontalFlip:
@@ -52,7 +52,7 @@ class RandomCrop:
         self.size = size
 
     def __call__(self, image, target):
-        crop_params = transforms.RandomCrop.get_params(image, (self.size, self.size))
+        crop_params = transforms.RandomCrop.get_params(image, self.size)
         image = F.crop(image, *crop_params)
         target = F.crop(target, *crop_params)
         return image, target
@@ -82,10 +82,6 @@ class RandomHueSaturationValue:
         image = F.adjust_hue(image, h_shift)
         image = F.adjust_saturation(image, s_shift)
         image = F.adjust_brightness(image, v_shift)
-
-        mask = F.adjust_hue(mask, h_shift)
-        mask = F.adjust_saturation(mask, s_shift)
-        mask = F.adjust_brightness(mask, v_shift)
         
         return image, mask
 
@@ -96,8 +92,7 @@ class RandomGamma:
     def __call__(self, image, mask):
         gamma_value = np.random.uniform(self.gamma[0], self.gamma[1])
         image = F.adjust_gamma(image, gamma_value)
-        mask = F.adjust_gamma(mask, gamma_value)
-        
+
         return image, mask
 
 class RandomBrightness:
@@ -107,7 +102,6 @@ class RandomBrightness:
     def __call__(self, image, mask):
         brightness_factor = np.random.uniform(self.brightness[0], self.brightness[1])
         image = F.adjust_brightness(image, brightness_factor)
-        mask = F.adjust_brightness(mask, brightness_factor)
         
         return image, mask
     

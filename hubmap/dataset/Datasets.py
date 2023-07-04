@@ -33,7 +33,6 @@ class AbstractDataset(ABC, Dataset):
     def __init__(self, image_dir, transform=None):
         self.image_dir = image_dir
         self.transform = transform
-        self.transform_mask = transform
         self.tiles_dicts = self._load_polygons()
         self.meta_df = pd.read_csv(f"{image_dir}/tile_meta.csv")
 
@@ -126,8 +125,7 @@ class BaseDataset(AbstractDataset):
         mask = generate_mask(img_data)
 
         if self.transform is not None:
-            image = self.transform(image)
-            mask = self.transform_mask(mask) 
+            image, mask = self.transform(image, mask) 
             
         return image, mask
     
@@ -162,8 +160,23 @@ class ExpertDataset(AbstractDataset):
         mask = generate_mask(img_data)
 
         if self.transform is not None:
-            image = self.transform(image)
-            mask = self.transform_mask(mask) 
+            image, mask = self.transform(image, mask)
 
         return image, mask
     
+
+# ich mache nicht die regeln :D
+#https://discuss.pytorch.org/t/torch-utils-data-dataset-random-split/32209
+class DatasetFromSubset(AbstractDataset):
+    def __init__(self, subset, transform=None):
+        self.subset = subset
+        self.transform = transform
+
+    def __getitem__(self, index):
+        x, y = self.subset[index]
+        if self.transform:
+            x, y = self.transform(x, y)
+        return x, y
+
+    def __len__(self):
+        return len(self.subset)
