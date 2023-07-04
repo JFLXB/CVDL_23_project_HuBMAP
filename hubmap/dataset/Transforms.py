@@ -69,7 +69,7 @@ class RandomRotate90:
         return image, mask
     
 class RandomHueSaturationValue:
-    def __init__(self, hue_shift=(-0.01, 0.01), sat_shift=(-0.01, 0.01), val_shift=(-0.01, 0.01)):
+    def __init__(self, hue_shift=(-0.5, 0.5), sat_shift=(0, 2), val_shift=(0.5, 2)):
         self.hue_shift = hue_shift
         self.sat_shift = sat_shift
         self.val_shift = val_shift
