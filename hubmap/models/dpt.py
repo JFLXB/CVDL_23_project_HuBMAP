@@ -51,10 +51,14 @@ def forward_vit(pretrained, x):
     if layer_4.ndim == 3:
         layer_4 = unflatten(layer_4)
 
-    layer_1 = pretrained.act_postprocess1[3 : len(pretrained.act_postprocess1)](layer_1)
-    layer_2 = pretrained.act_postprocess2[3 : len(pretrained.act_postprocess2)](layer_2)
-    layer_3 = pretrained.act_postprocess3[3 : len(pretrained.act_postprocess3)](layer_3)
-    layer_4 = pretrained.act_postprocess4[3 : len(pretrained.act_postprocess4)](layer_4)
+    layer_1 = pretrained.act_postprocess1[3: len(
+        pretrained.act_postprocess1)](layer_1)
+    layer_2 = pretrained.act_postprocess2[3: len(
+        pretrained.act_postprocess2)](layer_2)
+    layer_3 = pretrained.act_postprocess3[3: len(
+        pretrained.act_postprocess3)](layer_3)
+    layer_4 = pretrained.act_postprocess4[3: len(
+        pretrained.act_postprocess4)](layer_4)
 
     return layer_1, layer_2, layer_3, layer_4
 
@@ -201,13 +205,15 @@ class FeatureFusionBlock(nn.Module):
 def _resize_pos_embed(self, posemb, gs_h, gs_w):
     posemb_tok, posemb_grid = (
         posemb[:, : self.start_index],
-        posemb[0, self.start_index :],
+        posemb[0, self.start_index:],
     )
 
     gs_old = int(math.sqrt(len(posemb_grid)))
 
-    posemb_grid = posemb_grid.reshape(1, gs_old, gs_old, -1).permute(0, 3, 1, 2)
-    posemb_grid = F.interpolate(posemb_grid, size=(gs_h, gs_w), mode="bilinear")
+    posemb_grid = posemb_grid.reshape(
+        1, gs_old, gs_old, -1).permute(0, 3, 1, 2)
+    posemb_grid = F.interpolate(
+        posemb_grid, size=(gs_h, gs_w), mode="bilinear")
     posemb_grid = posemb_grid.permute(0, 2, 3, 1).reshape(1, gs_h * gs_w, -1)
 
     posemb = torch.cat([posemb_tok, posemb_grid], dim=1)
@@ -270,11 +276,12 @@ class ProjectReadout(nn.Module):
         super(ProjectReadout, self).__init__()
         self.start_index = start_index
 
-        self.project = nn.Sequential(nn.Linear(2 * in_features, in_features), nn.GELU())
+        self.project = nn.Sequential(
+            nn.Linear(2 * in_features, in_features), nn.GELU())
 
     def forward(self, x):
-        readout = x[:, 0].unsqueeze(1).expand_as(x[:, self.start_index :])
-        features = torch.cat((x[:, self.start_index :], readout), -1)
+        readout = x[:, 0].unsqueeze(1).expand_as(x[:, self.start_index:])
+        features = torch.cat((x[:, self.start_index:], readout), -1)
 
         return self.project(features)
 
@@ -321,7 +328,7 @@ class Slice(nn.Module):
         self.start_index = start_index
 
     def forward(self, x):
-        return x[:, self.start_index :]
+        return x[:, self.start_index:]
 
 
 class AddReadout(nn.Module):
@@ -334,7 +341,7 @@ class AddReadout(nn.Module):
             readout = (x[:, 0] + x[:, 1]) / 2
         else:
             readout = x[:, 0]
-        return x[:, self.start_index :] + readout.unsqueeze(1)
+        return x[:, self.start_index:] + readout.unsqueeze(1)
 
 
 def get_readout_oper(vit_features, features, use_readout, start_index=1):
@@ -370,8 +377,10 @@ def _make_vit_b_rn50_backbone(
     pretrained.model = model
 
     if use_vit_only is True:
-        pretrained.model.blocks[hooks[0]].register_forward_hook(get_activation("1"))
-        pretrained.model.blocks[hooks[1]].register_forward_hook(get_activation("2"))
+        pretrained.model.blocks[hooks[0]].register_forward_hook(
+            get_activation("1"))
+        pretrained.model.blocks[hooks[1]].register_forward_hook(
+            get_activation("2"))
     else:
         pretrained.model.patch_embed.backbone.stages[0].register_forward_hook(
             get_activation("1")
@@ -380,19 +389,26 @@ def _make_vit_b_rn50_backbone(
             get_activation("2")
         )
 
-    pretrained.model.blocks[hooks[2]].register_forward_hook(get_activation("3"))
-    pretrained.model.blocks[hooks[3]].register_forward_hook(get_activation("4"))
+    pretrained.model.blocks[hooks[2]].register_forward_hook(
+        get_activation("3"))
+    pretrained.model.blocks[hooks[3]].register_forward_hook(
+        get_activation("4"))
 
     if enable_attention_hooks:
-        pretrained.model.blocks[2].attn.register_forward_hook(get_attention("attn_1"))
-        pretrained.model.blocks[5].attn.register_forward_hook(get_attention("attn_2"))
-        pretrained.model.blocks[8].attn.register_forward_hook(get_attention("attn_3"))
-        pretrained.model.blocks[11].attn.register_forward_hook(get_attention("attn_4"))
+        pretrained.model.blocks[2].attn.register_forward_hook(
+            get_attention("attn_1"))
+        pretrained.model.blocks[5].attn.register_forward_hook(
+            get_attention("attn_2"))
+        pretrained.model.blocks[8].attn.register_forward_hook(
+            get_attention("attn_3"))
+        pretrained.model.blocks[11].attn.register_forward_hook(
+            get_attention("attn_4"))
         pretrained.attention = attention
 
     pretrained.activations = activations
 
-    readout_oper = get_readout_oper(vit_features, features, use_readout, start_index)
+    readout_oper = get_readout_oper(
+        vit_features, features, use_readout, start_index)
 
     if use_vit_only is True:
         pretrained.act_postprocess1 = nn.Sequential(
@@ -487,7 +503,8 @@ def _make_vit_b_rn50_backbone(
     # We inject this function into the VisionTransformer instances so that
     # we can use it with interpolated position embeddings without modifying the library
     # source.
-    pretrained.model.forward_flex = types.MethodType(forward_flex, pretrained.model)
+    pretrained.model.forward_flex = types.MethodType(
+        forward_flex, pretrained.model)
 
     # We inject this function into the VisionTransformer instances so that
     # we can use it with interpolated position embeddings without modifying the library
@@ -506,7 +523,8 @@ def make_pretrained_vitb_rn50_384(
     use_vit_only=False,
     enable_attention_hooks=False,
 ):
-    model = timm.create_model("vit_base_resnet50_384", pretrained=pretrained)
+    model = timm.create_model(
+        "vit_base_r50_s16_384.orig_in21k_ft_in1k", pretrained=pretrained)
 
     hooks = [0, 1, 8, 11] if hooks is None else hooks
     return _make_vit_b_rn50_backbone(
@@ -689,7 +707,8 @@ class DPT(nn.Module):
         self.scratch.refinenet4 = make_fusion_block(features, use_bn)
 
         self.scratch.output_conv = nn.Sequential(
-            nn.Conv2d(features, features, kernel_size=3, padding=1, bias=False),
+            nn.Conv2d(features, features, kernel_size=3,
+                      padding=1, bias=False),
             nn.BatchNorm2d(features),
             nn.ReLU(True),
             nn.Dropout(0.1, False),
