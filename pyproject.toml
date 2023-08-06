@@ -22,6 +22,7 @@ dpt = {git = "git@github.com:isl-org/DPT.git"}
 ipykernel = "^6.23.2"
 torchvision = "^0.15.2"
 black = "^23.7.0"
+notebook = "^7.0.2"
 
 [build-system]
 requires = ["poetry-core"]
