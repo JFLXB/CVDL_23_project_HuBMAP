@@ -8,17 +8,9 @@ class BCEDiceLoss(nn.Module):
 
     def forward(self, inputs, targets, smooth=1):
         
-        #comment out if your model contains a sigmoid or equivalent activation layer
-#         print(inputs.size(), targets.size())
         inputs = F.sigmoid(inputs)       
-#         print(inputs.size(), targets.size())
-        #flatten label and prediction tensors
-#         print("do flatten")
-#         inputs = inputs.view(-1)
-        inputs = inputs.flatten()
-#         print(inputs.size(), targets.size())
-#         targets = targets.view(-1)
-        targets = targets.flatten()
+        inputs = inputs.reshape(-1)
+        targets = targets.reshape(-1)
         
         intersection = (inputs * targets).sum()                            
         dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)  
