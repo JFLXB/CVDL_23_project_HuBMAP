@@ -21,6 +21,7 @@ pandas = "^2.0.2"
 dpt = {git = "git@github.com:isl-org/DPT.git"}
 ipykernel = "^6.23.2"
 torchvision = "^0.15.2"
+black = "^23.7.0"
 
 [build-system]
 requires = ["poetry-core"]

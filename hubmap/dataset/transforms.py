@@ -8,6 +8,7 @@ import numpy as np
 # image und mask machen, keine ahnung warum es keinen standart dafür gibt
 # https://discuss.huggingface.co/t/apply-same-transform-to-pixel-values-and-labels-for-semantic-segmentation/16267
 
+
 class Compose:
     def __init__(self, transforms):
         self.transforms = transforms
@@ -17,7 +18,8 @@ class Compose:
         for t in self.transforms:
             image, mask = t(image, mask)
         return image, mask
-    
+
+
 class Resize:
     def __init__(self, size):
         self.size = size
@@ -26,6 +28,7 @@ class Resize:
         image = F.resize(image, self.size, antialias=True)
         target = F.resize(target, self.size, antialias=True)
         return image, target
+
 
 class RandomHorizontalFlip:
     def __init__(self, p=0.5):
@@ -37,6 +40,7 @@ class RandomHorizontalFlip:
             mask = F.hflip(mask)
         return image, mask
 
+
 class RandomVerticalFlip:
     def __init__(self, p=0.5):
         self.p = p
@@ -46,7 +50,8 @@ class RandomVerticalFlip:
             image = F.vflip(image)
             mask = F.vflip(mask)
         return image, mask
-    
+
+
 class RandomCrop:
     def __init__(self, size):
         self.size = size
@@ -56,7 +61,8 @@ class RandomCrop:
         image = F.crop(image, *crop_params)
         target = F.crop(target, *crop_params)
         return image, target
-    
+
+
 class RandomRotate90:
     def __init__(self, p=0.5):
         self.p = p
@@ -67,7 +73,8 @@ class RandomRotate90:
             image = image.rotate(90 * turns)
             mask = mask.rotate(90 * turns)
         return image, mask
-    
+
+
 class RandomHueSaturationValue:
     def __init__(self, hue_shift=(-0.5, 0.5), sat_shift=(0, 2), val_shift=(0.5, 2)):
         self.hue_shift = hue_shift
@@ -82,8 +89,9 @@ class RandomHueSaturationValue:
         image = F.adjust_hue(image, h_shift)
         image = F.adjust_saturation(image, s_shift)
         image = F.adjust_brightness(image, v_shift)
-        
+
         return image, mask
+
 
 class RandomGamma:
     def __init__(self, gamma=(0.2, 2.0)):
@@ -95,6 +103,7 @@ class RandomGamma:
 
         return image, mask
 
+
 class RandomBrightness:
     def __init__(self, brightness=(0.5, 2.0)):
         self.brightness = brightness
@@ -102,9 +111,10 @@ class RandomBrightness:
     def __call__(self, image, mask):
         brightness_factor = np.random.uniform(self.brightness[0], self.brightness[1])
         image = F.adjust_brightness(image, brightness_factor)
-        
+
         return image, mask
-    
+
+
 class Normalize:
     def __init__(self, mean, std):
         self.mean = mean
@@ -113,6 +123,7 @@ class Normalize:
     def __call__(self, image, target):
         image = F.normalize(image, mean=self.mean, std=self.std)
         return image, target
+
 
 class ToTensor:
     def __call__(self, image, mask):
