@@ -133,8 +133,8 @@ class BaseDataset(AbstractDataset):
 
 def _gen_dict_from_json_list(lst):
     out = dict()
-    for json in lst:
-        out[json["id"]] = json
+    for jsn in lst:
+        out[jsn["id"]] = jsn
     return out
 
 
