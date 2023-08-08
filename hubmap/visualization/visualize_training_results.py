@@ -16,7 +16,7 @@ def visualize_result(result: Dict):
     data_train = result["training"]["metric"]
     data_test = result["testing"]["metric"]
     metric_figure = _create_figure(
-        data_train, data_test, "Metric", "Training and Testing Metric"
+        data_train, data_test, "Benchmark", "Training and Testing Benchmark Values"
     )
 
     return loss_figure, metric_figure
@@ -43,6 +43,7 @@ def _create_figure(data_train, data_test, y_label, title):
     axs.set_ylabel(y_label)
     axs.set_title(title)
     return fig
+
 
 def _prepare_data(data):
     d = [(i, e) for i, elems in enumerate(data) for e in elems]

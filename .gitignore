@@ -168,3 +168,6 @@ hubmap/data/sample_submission.csv
 hubmap/data/tile_meta.csv
 hubmap/data/wsi_meta.csv
 hubmap/experiments/checkpoints/**/*
+
+checkpoints/*/**
+figures/*/**
