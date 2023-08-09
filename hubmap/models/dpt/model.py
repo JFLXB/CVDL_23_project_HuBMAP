@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 
 from hubmap.models.dpt.encoder import make_encoder
+from hubmap.models.dpt.encoder import Backbone
 from hubmap.models.dpt.fusion_block import make_fusion_block
 from hubmap.models.dpt.forward_vit import forward_vit
 from hubmap.models.dpt.core import Interpolate
@@ -20,7 +21,7 @@ class DPT(nn.Module):
         self,
         num_classes: int,
         features: int = 256,
-        backbone: str = "vitb_rn50_384",
+        backbone: Backbone = Backbone.vitb_rn50_384,
         readout: str = "project",
         channels_last: bool = False,
         use_bn: bool = True,
@@ -32,8 +33,12 @@ class DPT(nn.Module):
         self.channels_last = channels_last
 
         hooks = {
-            "vitb_rn50_384": [0, 1, 8, 11],
-            # TODO: remaining hooks.
+            Backbone.vitb_rn50_384: [0, 1, 8, 11],
+            Backbone.vitb16_384: [2, 5, 8, 11],
+            Backbone.vitl16_384: [5, 11, 17, 23],
+            # resnext101_wsl: None, as it does not use hooks. 
+            # Addition to the code of the source.
+            Backbone.resnext101_wsl: None,
         }
         self.num_classes = num_classes
 
