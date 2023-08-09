@@ -169,5 +169,7 @@ hubmap/data/tile_meta.csv
 hubmap/data/wsi_meta.csv
 hubmap/experiments/checkpoints/**/*
 
+checkpoints/*
 checkpoints/*/**
+figures/*
 figures/*/**
