@@ -173,3 +173,8 @@ checkpoints/*
 checkpoints/*/**
 figures/*
 figures/*/**
+
+
+# Custom for @jonas
+metric.ipynb
+tmp2.ipynb
