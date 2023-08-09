@@ -2,7 +2,7 @@ import torch
 import timm
 from hubmap.models.dpt.backbone import make_vit_b_rn50_backbone
 from hubmap.models.dpt.backbone import make_vit_b16_backbone
-from hubmap.models.dpt.backbone import make_resnet_backbone
+# from hubmap.models.dpt.backbone import make_resnet_backbone
 
 
 def make_pretrained_vitb_rn50_384(
@@ -58,6 +58,6 @@ def make_pretrained_vitb16_384(pretrained, use_readout="ignore", hooks=None, ena
     
     
     
-def make_pretrained_resnext101_wsl(use_pretrained):
-    resnet = torch.hub.load("facebookresearch/WSL-Images", "resnext101_32x8d_wsl")
-    return make_resnet_backbone(resnet)
+# def make_pretrained_resnext101_wsl(use_pretrained):
+#     resnet = torch.hub.load("facebookresearch/WSL-Images", "resnext101_32x8d_wsl")
+#     return make_resnet_backbone(resnet)

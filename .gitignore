@@ -173,7 +173,7 @@ checkpoints/*
 checkpoints/*/**
 figures/*
 figures/*/**
-
+!figures/visualization.ipynb
 
 # Custom for @jonas
 metric.ipynb

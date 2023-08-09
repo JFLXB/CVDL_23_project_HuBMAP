@@ -36,9 +36,9 @@ class DPT(nn.Module):
             Backbone.vitb_rn50_384: [0, 1, 8, 11],
             Backbone.vitb16_384: [2, 5, 8, 11],
             Backbone.vitl16_384: [5, 11, 17, 23],
-            # resnext101_wsl: None, as it does not use hooks. 
-            # Addition to the code of the source.
-            Backbone.resnext101_wsl: None,
+            # # resnext101_wsl: None, as it does not use hooks. 
+            # # Addition to the code of the source.
+            # Backbone.resnext101_wsl: None,
         }
         self.num_classes = num_classes
 

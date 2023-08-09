@@ -11,17 +11,17 @@ from hubmap.models.dpt.core import Transpose
 from hubmap.models.dpt.readout import get_readout_oper
 
 
-def make_resnet_backbone(resnet):
-    pretrained = nn.Module()
-    pretrained.layer1 = nn.Sequential(
-        resnet.conv1, resnet.bn1, resnet.relu, resnet.maxpool, resnet.layer1
-    )
+# def make_resnet_backbone(resnet):
+#     pretrained = nn.Module()
+#     pretrained.layer1 = nn.Sequential(
+#         resnet.conv1, resnet.bn1, resnet.relu, resnet.maxpool, resnet.layer1
+#     )
 
-    pretrained.layer2 = resnet.layer2
-    pretrained.layer3 = resnet.layer3
-    pretrained.layer4 = resnet.layer4
+#     pretrained.layer2 = resnet.layer2
+#     pretrained.layer3 = resnet.layer3
+#     pretrained.layer4 = resnet.layer4
 
-    return pretrained
+#     return pretrained
 
 
 def make_vit_b16_backbone(

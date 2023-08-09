@@ -138,6 +138,7 @@ def train(
         data_to_save = {
             "early_stopping": False,
             "epoch": epoch,
+            # "start_epoch": start_epoch,
             "model_state_dict": model.state_dict(),
             "optimizer_state_dict": optimizer.state_dict(),
             "training_loss_history": training_loss_history,

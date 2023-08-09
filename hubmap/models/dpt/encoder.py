@@ -2,7 +2,7 @@ from enum import StrEnum
 from hubmap.models.dpt.pretrained import make_pretrained_vitb_rn50_384
 from hubmap.models.dpt.pretrained import make_pretrained_vitl16_384
 from hubmap.models.dpt.pretrained import make_pretrained_vitb16_384
-from hubmap.models.dpt.pretrained import make_pretrained_resnext101_wsl
+# from hubmap.models.dpt.pretrained import make_pretrained_resnext101_wsl
 from hubmap.models.dpt.scratch import make_scratch
 
 
@@ -10,7 +10,7 @@ class Backbone(StrEnum):
     vitl16_384 = "vitl16_384"
     vitb_rn50_384 = "vitb_rn50_384"
     vitb16_384 = "vitb16_384"
-    resnext101_wsl = "resnext101_wsl"
+    # resnext101_wsl = "resnext101_wsl"
 
 
 def make_encoder(
@@ -56,11 +56,11 @@ def make_encoder(
         scratch = make_scratch(
             [96, 192, 384, 768], features, groups=groups, expand=expand
         )
-    elif backbone == Backbone.resnext101_wsl:
-        pretrained = make_pretrained_resnext101_wsl(use_pretrained)
-        scratch = make_scratch(
-            [256, 512, 1024, 2048], features, groups=groups, expand=expand
-        )
+    # elif backbone == Backbone.resnext101_wsl:
+    #     pretrained = make_pretrained_resnext101_wsl(use_pretrained)
+    #     scratch = make_scratch(
+    #         [256, 512, 1024, 2048], features, groups=groups, expand=expand
+    #     )
     else:
         raise NotImplementedError
     return pretrained, scratch
