@@ -23,11 +23,15 @@ def train(
     device: str,
     benchmark: nn.Module,  # TODO: allow multiple benchmarks.
     checkpoint_name: str,
-    start_epoch: int = 1,
     learning_rate_scheduler: Optional[LRScheduler] = None,
     early_stopping: Optional[EarlyStopping] = None,
+    continue_training: bool = False,
 ):
     """_summary_
+    
+    If the continue_training flag is set to True the checkpoint will be 
+    loaded from the checkpoint directory and training is continued from the last
+    checkpoint. And all information and progress up to the checkpoint will be loaded.
 
     Parameters
     ----------
@@ -45,21 +49,40 @@ def train(
         _description_
     device : str
         _description_
-    metric : nn.Module
+    benchmark : nn.Module
         _description_
-    start_epoch : int, optional
-        _description_, by default 1
+    learning_rate_scheduler : Optional[LRScheduler], optional
+        _description_, by default None
+    early_stopping : Optional[EarlyStopping], optional
+        _description_, by default None
+    continue_training : bool, optional
+        _description_, by default False
 
     Returns
     -------
     _type_
         _description_
     """
+    start_epoch = 1
+
     training_loss_history = []
     training_metric_history = []
 
     testing_loss_history = []
     testing_metric_history = []
+
+    # CHECK start_epoch.
+    if continue_training:
+        # Load checkpoint.
+        checkpoint = torch.load(Path(CHECKPOINT_DIR / checkpoint_name))
+        model.load_state_dict(checkpoint["model_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        start_epoch = checkpoint["epoch"] + 1
+        training_loss_history = checkpoint["training_loss_history"]
+        training_metric_history = checkpoint["training_metric_history"]
+        testing_loss_history = checkpoint["testing_loss_history"]
+        testing_metric_history = checkpoint["testing_metric_history"]
+
 
     for epoch in tqdm(range(start_epoch, start_epoch + num_epochs)):
         tqdm.write(f"Epoch {epoch}/{num_epochs} - Started training...")
