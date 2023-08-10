@@ -20,6 +20,42 @@ class ImageType(StrEnum):
     annotated = "annotated"
 
 
+def visualize_image(model, checkpoint_name: str, image: str, target: str, pred_idx: int):
+    plt.style.use(["science"])
+    checkpoint = torch.load(Path(CHECKPOINT_DIR / checkpoint_name))
+    
+    image = torch.load(Path(image), map_location=torch.device('cpu'))
+    target = torch.load(Path(target), map_location=torch.device('cpu'))
+
+    device = "cpu"
+    model.load_state_dict(checkpoint["model_state_dict"])
+    model = model.to(device)
+
+    # image, target = get_random_image_and_target(image_type, seed)
+    image = image.to(device)
+
+    prediction = get_prediction(model, image, pred_idx).detach().cpu()
+    image = image.cpu()
+
+    iou = IoU(0)
+    iou_score = iou(prediction, target)
+
+    image = image[0].squeeze().permute(1, 2, 0)
+    target = target[0].squeeze().permute(1, 2, 0)
+    prediction = prediction[0].permute(1, 2, 0)
+
+    fig, ax = plt.subplots(1, 2, figsize=(6, 5))
+    ax[0].imshow(image)
+    ax[0].imshow(target, alpha=0.4)
+    ax[0].set_title(f"Ground Truth")
+
+    ax[1].imshow(image)
+    ax[1].imshow(prediction, alpha=0.4)
+    ax[1].set_title(f"Prediction / IoU: {(iou_score.item() * 100):.2f}%")
+    plt.tight_layout()
+    return fig
+
+
 def visualize_random_image(
     model,
     checkpoint_name: str,
@@ -30,7 +66,8 @@ def visualize_random_image(
     plt.style.use(["science"])
     checkpoint = torch.load(Path(CHECKPOINT_DIR / checkpoint_name))
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu"
     model.load_state_dict(checkpoint["model_state_dict"])
     model = model.to(device)
 
@@ -61,7 +98,7 @@ def visualize_random_image(
     return fig
 
 
-def get_prediction(model, image, pred_idx = None):
+def get_prediction(model, image, pred_idx=None):
     model.eval()
     with torch.no_grad():
         # print(image.size())
@@ -69,8 +106,8 @@ def get_prediction(model, image, pred_idx = None):
         prediction = prediction[pred_idx] if pred_idx else prediction
         probs = F.softmax(prediction, dim=1)
         classes = torch.argmax(probs, dim=1, keepdims=True)
-        # classes_per_channel = torch.zeros_like(prediction)
-        # classes_per_channel.scatter_(1, classes, 1)
+        classes_per_channel = torch.zeros_like(prediction)
+        classes_per_channel.scatter_(1, classes, 1)
     return classes
 
 

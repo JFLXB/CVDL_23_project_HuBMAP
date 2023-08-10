@@ -88,7 +88,7 @@ def train(
         testing_metric_history = checkpoint["testing_metric_history"]
 
     for epoch in tqdm(range(start_epoch, start_epoch + num_epochs)):
-        tqdm.write(f"Epoch {epoch}/{num_epochs} - Started training...")
+        # tqdm.write(f"Epoch {epoch}/{num_epochs} - Started training...")
         training_losses = []
         training_accuracies = []
         model.train()
@@ -98,8 +98,16 @@ def train(
 
             optimizer.zero_grad()
             predictions = model(images)
-            preds_for_loss = predictions[loss_out_index] if loss_out_index is not None else predictions
-            preds_for_benchmark = predictions[benchmark_out_index] if benchmark_out_index is not None else predictions
+            preds_for_loss = (
+                predictions[loss_out_index]
+                if loss_out_index is not None
+                else predictions
+            )
+            preds_for_benchmark = (
+                predictions[benchmark_out_index]
+                if benchmark_out_index is not None
+                else predictions
+            )
 
             loss = criterion(preds_for_loss, targets)
             loss.backward()
@@ -113,7 +121,7 @@ def train(
         training_loss_history.append(training_losses)
         training_metric_history.append(training_accuracies)
 
-        tqdm.write(f"Epoch {epoch}/{num_epochs} - Started testing...")
+        # tqdm.write(f"Epoch {epoch}/{num_epochs} - Started testing...")
         testing_losses = []
         testing_accuracies = []
         model.eval()
@@ -123,8 +131,16 @@ def train(
 
             with torch.no_grad():
                 predictions = model(images)
-                preds_for_loss = predictions[loss_out_index] if loss_out_index is not None else predictions
-                preds_for_benchmark = predictions[benchmark_out_index] if benchmark_out_index is not None else predictions
+                preds_for_loss = (
+                    predictions[loss_out_index]
+                    if loss_out_index is not None
+                    else predictions
+                )
+                preds_for_benchmark = (
+                    predictions[benchmark_out_index]
+                    if benchmark_out_index is not None
+                    else predictions
+                )
                 loss = criterion(preds_for_loss, targets)
                 metric = benchmark(preds_for_benchmark, targets)
 
@@ -135,11 +151,11 @@ def train(
         testing_metric_history.append(testing_accuracies)
 
         tqdm.write(
-            f"Epoch {epoch}/{num_epochs} - Summary:\n"
-            f"\tTraining Loss: {np.mean(training_losses)}\n"
-            f"\tTraining metric: {np.mean(training_accuracies)}\n"
-            f"\tTesting Loss: {np.mean(testing_losses)}\n"
-            f"\tTesting metric: {np.mean(testing_accuracies)}\n"
+            f"Epoch {epoch}/{num_epochs} - Summary: "
+            f"TL: {np.mean(training_losses):.5f} "
+            f"TB: {np.mean(training_accuracies):.5f} "
+            f"VL: {np.mean(testing_losses):.5f} "
+            f"VB: {np.mean(testing_accuracies):.5f}"
         )
 
         data_to_save = {

@@ -274,3 +274,135 @@ class DS_out(nn.Module):
         out = torch.sigmoid(self.conv3(x1))
 
         return out
+
+
+class FCT(nn.Module):
+    def __init__(self, in_channels: int, num_classes: int):
+        super().__init__()
+
+        # attention heads and filters per block
+        att_heads = [2, 2, 2, 2, 2, 2, 2, 2, 2]
+        filters = [8, 16, 32, 64, 128, 64, 32, 16, 8]
+
+        # number of blocks used in the model
+        blocks = len(filters)
+
+        stochastic_depth_rate = 0.0
+
+        # probability for each block
+        dpr = [x for x in np.linspace(0, stochastic_depth_rate, blocks)]
+
+        self.drp_out = 0.3
+
+        # shape
+        # init_sizes = torch.ones((2,224,224,1))
+        # init_sizes = init_sizes.permute(0, 3, 1, 2)
+
+        # Multi-scale input
+        self.scale_img = nn.AvgPool2d(2, 2)
+
+        # blk, in_channels, out_channels, att_heads, dpr, image_in_channels):
+
+        # model
+        self.block_1 = Block_encoder_bottleneck(
+            "first", in_channels, filters[0], att_heads[0], dpr[0]
+        )
+        self.block_2 = Block_encoder_bottleneck(
+            "second", filters[0], filters[1], att_heads[1], dpr[1], in_channels
+        )
+        self.block_3 = Block_encoder_bottleneck(
+            "third", filters[1], filters[2], att_heads[2], dpr[2], in_channels
+        )
+        self.block_4 = Block_encoder_bottleneck(
+            "fourth", filters[2], filters[3], att_heads[3], dpr[3], in_channels
+        )
+        self.block_5 = Block_encoder_bottleneck(
+            "bottleneck", filters[3], filters[4], att_heads[4], dpr[4]
+        )
+        self.block_6 = Block_decoder(filters[4], filters[5], att_heads[5], dpr[5])
+        self.block_7 = Block_decoder(filters[5], filters[6], att_heads[6], dpr[6])
+        self.block_8 = Block_decoder(filters[6], filters[7], att_heads[7], dpr[7])
+        self.block_9 = Block_decoder(filters[7], filters[8], att_heads[8], dpr[8])
+
+        self.ds7 = DS_out(filters[6], num_classes)
+        self.ds8 = DS_out(filters[7], num_classes)
+        self.ds9 = DS_out(filters[8], num_classes)
+
+    def forward(self, x):
+        # Multi-scale input
+        scale_img_2 = self.scale_img(x)
+        scale_img_3 = self.scale_img(scale_img_2)
+        scale_img_4 = self.scale_img(scale_img_3)
+
+        x = self.block_1(x)
+        print(f"Block 1 out -> {list(x.size())}")
+        skip1 = x
+        x = self.block_2(x, scale_img_2)
+        print(f"Block 2 out -> {list(x.size())}")
+        skip2 = x
+        x = self.block_3(x, scale_img_3)
+        print(f"Block 3 out -> {list(x.size())}")
+        skip3 = x
+        x = self.block_4(x, scale_img_4)
+        print(f"Block 4 out -> {list(x.size())}")
+        skip4 = x
+        x = self.block_5(x)
+        print(f"Block 5 out -> {list(x.size())}")
+        x = self.block_6(x, skip4)
+        print(f"Block 6 out -> {list(x.size())}")
+        x = self.block_7(x, skip3)
+        print(f"Block 7 out -> {list(x.size())}")
+        skip7 = x
+        x = self.block_8(x, skip2)
+        print(f"Block 8 out -> {list(x.size())}")
+        skip8 = x
+        x = self.block_9(x, skip1)
+        print(f"Block 9 out -> {list(x.size())}")
+        skip9 = x
+
+        out7 = self.ds7(skip7)
+        print(f"DS 7 out -> {list(out7.size())}")
+        out8 = self.ds8(skip8)
+        print(f"DS 8 out -> {list(out8.size())}")
+        out9 = self.ds9(skip9)
+        print(f"DS 9 out -> {list(out9.size())}")
+
+        return out7, out8, out9
+
+
+def init_weights(m):
+    """
+    Initialize the weights
+    """
+    if isinstance(m, nn.Conv2d):
+        torch.nn.init.kaiming_normal(m.weight)
+        if m.bias is not None:
+            torch.nn.init.zeros_(m.bias)
+
+
+IN_CHANNELS = 4
+NUM_CLASSES = 3
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = FCT(in_channels=IN_CHANNELS, num_classes=NUM_CLASSES).to(device)
+model.apply(init_weights)
+
+loss_fn = nn.BCELoss()
+# optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+
+inpt = torch.randn(1, IN_CHANNELS, 64, 64).to(device)
+pred1, pred2, final = model(inpt)
+
+
+# Block 1 out -> [1, 8, 112, 112]
+# Block 2 out -> [1, 16, 56, 56]
+# Block 3 out -> [1, 32, 28, 28]
+# Block 4 out -> [1, 64, 14, 14]
+# Block 5 out -> [1, 128, 7, 7]
+# Block 6 out -> [1, 64, 14, 14]
+# Block 7 out -> [1, 32, 28, 28]
+# Block 8 out -> [1, 16, 56, 56]
+# Block 9 out -> [1, 8, 112, 112]
+# DS 7 out -> [1, 3, 56, 56]
+# DS 8 out -> [1, 3, 112, 112]
+# DS 9 out -> [1, 3, 224, 224]
