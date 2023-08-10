@@ -1,3 +1,4 @@
+import sys
 import torch
 import torch.optim as optim
 
@@ -13,9 +14,13 @@ from hubmap.models import FCT
 from hubmap.models.fct import init_weights
 
 
+batch_size = sys.argv[1]
+
+
 IMG_DIM = 512
 # Batch size of 1 is 4.91GB of GPU memory for the FCT model.
-BATCH_SIZE = 4 # MAXIMUM FOR THE IMAGE SIZE OF 512x512
+# Batch size of 4 is the MAXIMUM FOR THE IMAGE SIZE OF 512x512
+BATCH_SIZE = int(batch_size)
 NUM_EPOCHS = 200
 
 
