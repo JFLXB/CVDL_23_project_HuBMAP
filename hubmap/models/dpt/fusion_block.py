@@ -10,7 +10,7 @@ def make_fusion_block(features: int, use_bn: bool):
         expand=False,
         align_corners=True,
     )
-    
+
 
 class FeatureFusionBlock(nn.Module):
     """Feature fusion block."""
@@ -78,7 +78,7 @@ class FeatureFusionBlock(nn.Module):
         output = self.out_conv(output)
 
         return output
-    
+
 
 class ResidualConvUnit_custom(nn.Module):
     """Residual convolution module."""

@@ -64,6 +64,7 @@ class RandomCrop:
 
 
 class RandomRotate90:
+    # TODO: this is not working properly
     def __init__(self, p=0.5):
         self.p = p
 

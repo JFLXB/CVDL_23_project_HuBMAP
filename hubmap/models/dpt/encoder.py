@@ -2,6 +2,7 @@ from enum import StrEnum
 from hubmap.models.dpt.pretrained import make_pretrained_vitb_rn50_384
 from hubmap.models.dpt.pretrained import make_pretrained_vitl16_384
 from hubmap.models.dpt.pretrained import make_pretrained_vitb16_384
+
 # from hubmap.models.dpt.pretrained import make_pretrained_resnext101_wsl
 from hubmap.models.dpt.scratch import make_scratch
 

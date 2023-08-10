@@ -12,19 +12,22 @@ from checkpoints import CHECKPOINT_DIR
 def visualize_checkpoint(checkpoint_name: str):
     plt.style.use(["science"])
     checkpoint = torch.load(Path(CHECKPOINT_DIR / checkpoint_name))
-    
+
     # epoch = checkpoint["epoch"] + 1
     # start_epoch = checkpoint.get("start_epoch", 1)
     training_loss_history = checkpoint["training_loss_history"]
     training_metric_history = checkpoint["training_metric_history"]
     testing_loss_history = checkpoint["testing_loss_history"]
     testing_metric_history = checkpoint["testing_metric_history"]
-    
+
     loss_figure = _create_figure(
         training_loss_history, testing_loss_history, "Loss", "Training and Testing Loss"
-    )    
+    )
     metric_figure = _create_figure(
-        training_metric_history, testing_metric_history, "Benchmark", "Training and Testing Benchmark Values"
+        training_metric_history,
+        testing_metric_history,
+        "Benchmark",
+        "Training and Testing Benchmark Values",
     )
 
     return loss_figure, metric_figure

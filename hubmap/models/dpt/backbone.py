@@ -314,5 +314,3 @@ def _resize_pos_embed(self, posemb, gs_h, gs_w):
     posemb = torch.cat([posemb_tok, posemb_grid], dim=1)
 
     return posemb
-
-

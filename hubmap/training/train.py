@@ -28,8 +28,8 @@ def train(
     continue_training: bool = False,
 ):
     """_summary_
-    
-    If the continue_training flag is set to True the checkpoint will be 
+
+    If the continue_training flag is set to True the checkpoint will be
     loaded from the checkpoint directory and training is continued from the last
     checkpoint. And all information and progress up to the checkpoint will be loaded.
 
@@ -82,7 +82,6 @@ def train(
         training_metric_history = checkpoint["training_metric_history"]
         testing_loss_history = checkpoint["testing_loss_history"]
         testing_metric_history = checkpoint["testing_metric_history"]
-
 
     for epoch in tqdm(range(start_epoch, start_epoch + num_epochs)):
         tqdm.write(f"Epoch {epoch}/{num_epochs} - Started training...")

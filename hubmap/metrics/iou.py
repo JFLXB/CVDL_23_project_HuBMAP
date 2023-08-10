@@ -50,19 +50,18 @@ class IoU:
             return iou_scores
 
 
-
 if __name__ == "__main__":
     iou = IoU(0)
 
     GT = torch.tensor([[[[1, 1, 0], [1, 1, 0], [0, 0, 0]]]])
     A = torch.tensor([[[[1, 1, 0], [1, 1, 0], [0, 0, 0]]]])
     assert iou(GT, A).item() == 1.0
-    
+
     B = torch.tensor([[[[0, 1, 0], [0, 0, 0], [0, 0, 0]]]])
-    assert iou(GT, B).item() == 1/4
-    
+    assert iou(GT, B).item() == 1 / 4
+
     C = torch.tensor([[[[0, 1, 0], [0, 1, 0], [0, 0, 0]]]])
-    assert iou(GT, C).item() == 2/4
-    
+    assert iou(GT, C).item() == 2 / 4
+
     D = torch.tensor([[[[0, 1, 0], [1, 1, 0], [0, 0, 0]]]])
-    assert iou(GT, D).item() == 3/4
+    assert iou(GT, D).item() == 3 / 4

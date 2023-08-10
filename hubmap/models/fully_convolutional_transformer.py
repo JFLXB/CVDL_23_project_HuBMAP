@@ -383,11 +383,12 @@ class FCT(nn.Module):
         return out7, out8, out9
 
 
+@torch.no_grad()
 def init_weights(m):
     """
     Initialize the weights
     """
     if isinstance(m, nn.Conv2d):
-        torch.nn.init.kaiming_normal(m.weight)
+        torch.nn.init.kaiming_normal_(m.weight)
         if m.bias is not None:
             torch.nn.init.zeros_(m.bias)

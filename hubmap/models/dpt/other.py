@@ -1,9 +1,6 @@
 import torch.nn as nn
 
 
-
-
-
 class Interpolate(nn.Module):
     """Interpolation module."""
 
