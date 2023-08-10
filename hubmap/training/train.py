@@ -26,6 +26,10 @@ def train(
     learning_rate_scheduler: Optional[LRScheduler] = None,
     early_stopping: Optional[EarlyStopping] = None,
     continue_training: bool = False,
+    # this is needed to select the output of the model to be used for the loss function
+    # used for models that have multiple outputs, e.g. FCT
+    loss_out_index: int = None,
+    benchmark_out_index: int = None,
 ):
     """_summary_
 
@@ -94,12 +98,14 @@ def train(
 
             optimizer.zero_grad()
             predictions = model(images)
+            preds_for_loss = predictions[loss_out_index] if loss_out_index is not None else predictions
+            preds_for_benchmark = predictions[benchmark_out_index] if benchmark_out_index is not None else predictions
 
-            loss = criterion(predictions, targets)
+            loss = criterion(preds_for_loss, targets)
             loss.backward()
             optimizer.step()
 
-            metric = benchmark(predictions, targets)
+            metric = benchmark(preds_for_benchmark, targets)
 
             training_losses.append(loss.item())
             training_accuracies.append(metric.item())
@@ -117,8 +123,10 @@ def train(
 
             with torch.no_grad():
                 predictions = model(images)
-                loss = criterion(predictions, targets)
-                metric = benchmark(predictions, targets)
+                preds_for_loss = predictions[loss_out_index] if loss_out_index is not None else predictions
+                preds_for_benchmark = predictions[benchmark_out_index] if benchmark_out_index is not None else predictions
+                loss = criterion(preds_for_loss, targets)
+                metric = benchmark(preds_for_benchmark, targets)
 
             testing_losses.append(loss.item())
             testing_accuracies.append(metric.item())

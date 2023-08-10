@@ -25,6 +25,7 @@ def visualize_random_image(
     checkpoint_name: str,
     image_type: ImageType = ImageType.expert,
     seed: Optional[int] = None,
+    pred_idx: int = None,
 ):
     plt.style.use(["science"])
     checkpoint = torch.load(Path(CHECKPOINT_DIR / checkpoint_name))
@@ -36,7 +37,7 @@ def visualize_random_image(
     image, target = get_random_image_and_target(image_type, seed)
     image = image.to(device)
 
-    prediction = get_prediction(model, image).detach().cpu()
+    prediction = get_prediction(model, image, pred_idx).detach().cpu()
     image = image.cpu()
 
     iou = IoU(0)
@@ -44,7 +45,7 @@ def visualize_random_image(
 
     image = image[0].squeeze().permute(1, 2, 0)
     target = target[0].squeeze().permute(1, 2, 0)
-    print(prediction[0].size())
+    # print(prediction[0].size())
     prediction = prediction[0].permute(1, 2, 0)
 
     fig, ax = plt.subplots(1, 2, figsize=(6, 5))
@@ -60,11 +61,12 @@ def visualize_random_image(
     return fig
 
 
-def get_prediction(model, image):
+def get_prediction(model, image, pred_idx = None):
     model.eval()
     with torch.no_grad():
-        print(image.size())
+        # print(image.size())
         prediction = model(image)
+        prediction = prediction[pred_idx] if pred_idx else prediction
         probs = F.softmax(prediction, dim=1)
         classes = torch.argmax(probs, dim=1, keepdims=True)
         # classes_per_channel = torch.zeros_like(prediction)
@@ -109,5 +111,5 @@ def get_random_image_and_target(image_type: ImageType, seed: Optional[int] = Non
     for i, (image, target) in enumerate(train_loader):
         if i == idx:
             break
-    print(image.size())
+    # print(image.size())
     return image, target
