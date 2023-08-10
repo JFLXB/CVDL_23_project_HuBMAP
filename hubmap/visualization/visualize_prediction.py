@@ -20,20 +20,19 @@ class ImageType(StrEnum):
     annotated = "annotated"
 
 
-def visualize_image(model, checkpoint_name: str, image: str, target: str, pred_idx: int):
+def visualize_image(
+    model, checkpoint_name: str, image: str, target: str, pred_idx: int
+):
     plt.style.use(["science"])
     checkpoint = torch.load(Path(CHECKPOINT_DIR / checkpoint_name))
-    
-    image = torch.load(Path(image), map_location=torch.device('cpu'))
-    target = torch.load(Path(target), map_location=torch.device('cpu'))
+
+    image = torch.load(Path(image), map_location=torch.device("cpu"))
+    target = torch.load(Path(target), map_location=torch.device("cpu"))
 
     device = "cpu"
     model.load_state_dict(checkpoint["model_state_dict"])
     model = model.to(device)
-
-    # image, target = get_random_image_and_target(image_type, seed)
     image = image.to(device)
-
     prediction = get_prediction(model, image, pred_idx).detach().cpu()
     image = image.cpu()
 
@@ -44,14 +43,28 @@ def visualize_image(model, checkpoint_name: str, image: str, target: str, pred_i
     target = target[0].squeeze().permute(1, 2, 0)
     prediction = prediction[0].permute(1, 2, 0)
 
-    fig, ax = plt.subplots(1, 2, figsize=(6, 5))
+    fig, ax = plt.subplots(1, 3, figsize=(6, 5))
     ax[0].imshow(image)
-    ax[0].imshow(target, alpha=0.4)
-    ax[0].set_title(f"Ground Truth")
+    ax[0].set_title(f"Image")
+    # ax[0].imshow(target, alpha=0.4)
 
-    ax[1].imshow(image)
-    ax[1].imshow(prediction, alpha=0.4)
-    ax[1].set_title(f"Prediction / IoU: {(iou_score.item() * 100):.2f}%")
+    if target.size(2) < 3:
+        diff = 3 - target.shape[2]
+        ad = torch.zeros((target.size(0), target.size(1), diff))
+        target = torch.cat((target, ad), 2)
+
+    ax[1].imshow(target)
+    ax[1].set_title(f"Ground Truth")
+
+    # ax[1].imshow(image)
+    print(prediction.size(2))
+    if prediction.size(2) < 3:
+        diff = 3 - prediction.shape[2]
+        ad = torch.zeros((prediction.size(0), prediction.size(1), diff))
+        prediction = torch.cat((prediction, ad), 2)
+
+    ax[2].imshow(prediction)
+    ax[2].set_title(f"Prediction / IoU: {(iou_score.item() * 100):.2f}%")
     plt.tight_layout()
     return fig
 
@@ -82,17 +95,15 @@ def visualize_random_image(
 
     image = image[0].squeeze().permute(1, 2, 0)
     target = target[0].squeeze().permute(1, 2, 0)
-    # print(prediction[0].size())
-    prediction = prediction[0].permute(1, 2, 0)
+    prediction = prediction.permute(1, 2, 0)
 
-    fig, ax = plt.subplots(1, 2, figsize=(6, 5))
+    fig, ax = plt.subplots(1, 3, figsize=(6, 5))
     ax[0].imshow(image)
-    ax[0].imshow(target, alpha=0.4)
-    ax[0].set_title(f"Ground Truth")
-
-    ax[1].imshow(image)
-    ax[1].imshow(prediction, alpha=0.4)
-    ax[1].set_title(f"Prediction / IoU: {(iou_score.item() * 100):.2f}%")
+    ax[0].set_title(f"Image")
+    ax[1].imshow(target)
+    ax[1].set_title(f"Ground Truth")
+    ax[2].imshow(prediction)
+    ax[2].set_title(f"Prediction / IoU: {(iou_score.item() * 100):.2f}%")
     # fig.suptitle(f"IoU: {(iou_score.item() * 100):.2f}%")
     plt.tight_layout()
     return fig
@@ -101,14 +112,13 @@ def visualize_random_image(
 def get_prediction(model, image, pred_idx=None):
     model.eval()
     with torch.no_grad():
-        # print(image.size())
         prediction = model(image)
-        prediction = prediction[pred_idx] if pred_idx else prediction
+        prediction = prediction[pred_idx] if pred_idx is not None else prediction
         probs = F.softmax(prediction, dim=1)
         classes = torch.argmax(probs, dim=1, keepdims=True)
         classes_per_channel = torch.zeros_like(prediction)
         classes_per_channel.scatter_(1, classes, 1)
-    return classes
+    return classes_per_channel
 
 
 def get_random_image_and_target(image_type: ImageType, seed: Optional[int] = None):

@@ -48,14 +48,14 @@ class IoU:
         iou_score = torch.sum(intersection, dim=(1, 2)) / torch.sum(union, dim=(1, 2))
         # print(iou_score.size())
         # print(iou_score)
-        
+
         # intersection = torch.logical_and(prediction, target)
         # union = torch.logical_or(prediction, target)
         # iou_score = torch.sum(intersection) / torch.sum(union)
         # # return self._do_reduction(iou_score)
         # print(iou_score.item())
         # return iou_score
-        
+
         return self._do_reduction(iou_score)
 
     def _do_reduction(self, iou_scores):

@@ -66,40 +66,44 @@ test_transformations = T.Compose(
 load_annotated_data = make_annotated_loader(train_transformations, test_transformations)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-checkpoint_name = (
-    f"fct_overfit_img_size_{IMG_DIM}.pt"
-)
+checkpoint_name = f"fct_overfit_img_size_{IMG_DIM}.pt"
 
-model = FCT(in_channels=3, num_classes=3).to(device)
+model = FCT(in_channels=3, num_classes=2).to(device)
 model.apply(init_weights)
 
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
 # criterion = MultiOutputBCELoss(
-    # weights=[0.14, 0.29, 0.57], interpolation_strategy="bilinear"
+# weights=[0.14, 0.29, 0.57], interpolation_strategy="bilinear"
 # )
 criterion = nn.BCELoss()
 
 # WE ARE ONLY INTERESTED IN THE IoU OF THE BLOOD VESSEL CLASS FOR NOW.
 benchmark = IoU(class_index=0)
 # train_loader, test_loader = load_annotated_data(BATCH_SIZE)
-lr_scheduler = LRScheduler(optimizer, patience=20, min_lr=1e-6, factor=0.8)
+lr_scheduler = LRScheduler(optimizer, patience=5, min_lr=1e-6, factor=0.8)
 # early_stopping = EarlyStopping(patience=50, min_delta=0.0)
-
-# image, target = next(iter(train_loader))
-# image = torch.zeros((1, 3, IMG_DIM, IMG_DIM))
-# target = torch.zeros((1, 3, IMG_DIM, IMG_DIM))
-
-# box_size = IMG_DIM // 4
-# image[:, 0, 0:box_size, 0:box_size] = 1
-# image[:, 0, box_size:2*box_size, box_size:2*box_size] = 1
-# target[:, 0, 0:box_size, 0:box_size] = 1
 
 image = torch.zeros((1, 3, IMG_DIM, IMG_DIM))
 box_size = IMG_DIM // 4
+image = torch.zeros((1, 3, IMG_DIM, IMG_DIM))
 image[:, 0, 0:box_size, 0:box_size] = 1
-image[:, 1, box_size:2*box_size, box_size:2*box_size] = 1
-image[:, 2, 2*box_size:3*box_size, 2*box_size:3*box_size] = 1
-target = deepcopy(image)
+image[:, 0, 2 * box_size : 3 * box_size, 0:box_size] = 1
+image[:, 0, 0:box_size, 2 * box_size : 3 * box_size] = 1
+image[:, 0, 2 * box_size : 3 * box_size, 2 * box_size : 3 * box_size] = 1
+image[:, 1, 0 : 4 * box_size, box_size : 2 * box_size] = 1
+image[:, 1, 0 : 4 * box_size, 3 * box_size : 4 * box_size] = 1
+image[:, 1, box_size : 2 * box_size, 0 : 4 * box_size] = 1
+image[:, 1, 3 * box_size : 4 * box_size, 0 : 4 * box_size] = 1
+
+target = torch.zeros((1, 2, IMG_DIM, IMG_DIM))
+target[:, 0, 0:box_size, 0:box_size] = 1
+target[:, 0, 2 * box_size : 3 * box_size, 0:box_size] = 1
+target[:, 0, 0:box_size, 2 * box_size : 3 * box_size] = 1
+target[:, 0, 2 * box_size : 3 * box_size, 2 * box_size : 3 * box_size] = 1
+target[:, 1, 0 : 4 * box_size, box_size : 2 * box_size] = 1
+target[:, 1, 0 : 4 * box_size, 3 * box_size : 4 * box_size] = 1
+target[:, 1, box_size : 2 * box_size, 0 : 4 * box_size] = 1
+target[:, 1, 3 * box_size : 4 * box_size, 0 : 4 * box_size] = 1
 
 
 # SAVE IMAGES
