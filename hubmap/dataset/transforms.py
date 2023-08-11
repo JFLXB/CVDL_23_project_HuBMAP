@@ -15,10 +15,13 @@ class Compose:
         self.transforms = transforms
 
     def __call__(self, image, mask):
-        #assert image.size == mask.size
+        # assert image.size == mask.size
         for t in self.transforms:
             image, mask = t(image, mask)
         return image, mask
+
+    def __iter__(self):
+        return iter(self.transforms)
 
 
 class Resize:

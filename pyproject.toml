@@ -29,6 +29,7 @@ ipykernel = "^6.25.0"
 ipython = "^8.14.0"
 pytorch-lightning = "^2.0.6"
 lightning = "^2.0.6"
+scikit-image = "^0.21.0"
 
 [build-system]
 requires = ["poetry-core"]

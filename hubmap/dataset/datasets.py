@@ -1,5 +1,6 @@
 from PIL import Image
 from torch.utils.data import Dataset
+import torchvision.transforms as T
 import numpy as np
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -8,38 +9,36 @@ import json
 import pandas as pd
 from abc import ABC, abstractmethod
 
-id2label  = {0 : "blood_vessel", 1 : "glomerulus", 2 : "unsure", 3 : "background"}
-label2id = {"blood_vessel" : 0, "glomerulus": 1, "unsure": 2, "background": 3}
+id2label = {0: "blood_vessel", 1: "glomerulus", 2: "unsure", 3: "background"}
+label2id = {"blood_vessel": 0, "glomerulus": 1, "unsure": 2, "background": 3}
+
 
 def generate_mask(img_data, with_background=False, as_indexed_mask=False):
     if as_indexed_mask:
-        mask = np.zeros((512, 512,1), dtype=np.uint8)
+        mask = np.zeros((512, 512, 1), dtype=np.uint8)
     elif with_background:
-        mask = np.zeros((512, 512,4), dtype=np.uint8)
+        mask = np.zeros((512, 512, 4), dtype=np.uint8)
     else:
-        mask = np.zeros((512, 512,3), dtype=np.uint8)
+        mask = np.zeros((512, 512, 3), dtype=np.uint8)
 
     for group in img_data["annotations"]:
         coordinates = group["coordinates"][0]
         points = np.array(coordinates, dtype=np.int32)
         points = points.reshape((-1, 1, 2))
-        temp = np.zeros((512,512), dtype=np.uint8)
+        temp = np.zeros((512, 512), dtype=np.uint8)
+
         if as_indexed_mask:
             temp = np.full((512, 512), 3, dtype=np.uint8)
             cv2.fillPoly(temp, [points], color=label2id[group["type"]])
-            mask[:,:,0] += temp
-        if group["type"] == "blood_vessel":
-            cv2.fillPoly(temp, [points], color=(255))
-            mask[:,:,0] += temp
-        elif group['type'] == "glomerulus":
-            cv2.fillPoly(temp, [points], color=(255))
-            mask[:,:,1] += temp
+            mask[:, :, 0] += temp
         else:
             cv2.fillPoly(temp, [points], color=(255))
-            mask[:,:,2] += temp
+            channel = label2id[group["type"]]
+            mask[:, :, channel] += temp
 
     if with_background:
-        mask[:,:,3] = 255 - np.sum(mask[:,:,:3], axis=2)
+        background_channel = label2id["background"]
+        mask[:, :, background_channel] = 255 - np.sum(mask, axis=2)
 
     return mask
 
@@ -50,7 +49,7 @@ class AbstractDataset(ABC, Dataset):
         self.transform = transform
         self.tiles_dicts = self._load_polygons()
         self.meta_df = pd.read_csv(f"{image_dir}/tile_meta.csv")
-        self.with_background=with_background
+        self.with_background = with_background
 
     def _load_polygons(self):
         with open(f"{self.image_dir}/polygons.jsonl", "r") as polygons:
@@ -105,18 +104,27 @@ class AbstractDataset(ABC, Dataset):
             fig, axs = plt.subplots(1, 4, figsize=(15, 5))
         axs[0].imshow(img)
         axs[0].set_title("Image")
-        axs[1].imshow(mask[:, :, 0], cmap="gray")
+        axs[1].imshow(mask[:, :, label2id["blood_vessel"]], cmap="gray")
         axs[1].set_title("blood_vessel mask")
-        axs[2].imshow(mask[:, :, 1], cmap="gray")
+        axs[2].imshow(mask[:, :, label2id["glomerulus"]], cmap="gray")
         axs[2].set_title("glomerulus mask")
-        axs[3].imshow(mask[:, :, 2], cmap="gray")
+        axs[3].imshow(mask[:, :, label2id["unsure"]], cmap="gray")
         axs[3].set_title("unsure mask")
         if self.with_background:
-            axs[4].imshow(mask[:,:,3], cmap='gray')
+            axs[4].imshow(mask[:, :, label2id["background"]], cmap="gray")
             axs[4].set_title("background mask")
 
         plt.tight_layout()
         plt.show()
+
+    def get(self, idx: int, transform=None):
+        img_data = self.tiles_dicts[idx]
+        image_path = f'{self.image_dir}/train/{img_data["id"]}.tif'
+        image = Image.open(image_path)
+        mask = generate_mask(img_data, with_background=self.with_background)
+        if transform:
+            image, mask = transform(image, mask)
+        return image, mask
 
     @abstractmethod
     def __len__(self):
