@@ -1,5 +1,6 @@
 from PIL import Image
 from torch.utils.data import Dataset
+import torchvision.transforms as T
 import numpy as np
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -8,39 +9,34 @@ import json
 import pandas as pd
 from abc import ABC, abstractmethod
 
-#ids not 1,2,3 .. so its easier to plot
-id2label  = {0 : "blood_vessel", 70 : "glomerulus", 140 : "unsure", 255 : "background"}
-label2id = {"blood_vessel" : 0, "glomerulus": 70, "unsure": 140, "background": 255}
+
+id2label = {0: "blood_vessel", 1: "glomerulus", 2: "unsure", 3: "background"}
+label2id = {"blood_vessel": 0, "glomerulus": 1, "unsure": 2, "background": 3}
 
 def generate_mask(img_data, with_background=False, as_id_mask=False):
     if as_id_mask:
         #full 255s so all is background
-        mask = np.full((512, 512, 1), 255, dtype=np.uint8)
+        mask = np.full((512, 512, 1), 3, dtype=np.uint8)
     elif with_background:
-        mask = np.zeros((512, 512,4), dtype=np.uint8)
+        mask = np.zeros((512, 512, 4), dtype=np.uint8)
     else:
-        mask = np.zeros((512, 512,3), dtype=np.uint8)
+        mask = np.zeros((512, 512, 3), dtype=np.uint8)
 
     for group in img_data["annotations"]:
         coordinates = group["coordinates"][0]
         points = np.array(coordinates, dtype=np.int32)
         points = points.reshape((-1, 1, 2))
         temp = np.zeros((512,512), dtype=np.uint8)
+
         if as_id_mask:
             cv2.fillPoly(mask[:,:,0], [points], color=label2id[group["type"]])
         else:
-            if group["type"] == "blood_vessel":
-                cv2.fillPoly(temp, [points], color=(255))
-                mask[:,:,0] += temp
-            elif group['type'] == "glomerulus":
-                cv2.fillPoly(temp, [points], color=(255))
-                mask[:,:,1] += temp
-            else:
-                cv2.fillPoly(temp, [points], color=(255))
-                mask[:,:,2] += temp
-
-    if with_background and not as_id_mask:
-        mask[:,:,3] = 255 - np.sum(mask[:,:,:3], axis=2)
+            cv2.fillPoly(temp, [points], color=(255))
+            channel = label2id[group["type"]]
+            mask[:, :, channel] += temp
+    if with_background:
+        background_channel = label2id["background"]
+        mask[:, :, background_channel] = 255 - np.sum(mask, axis=2)
 
     return mask
 
@@ -105,7 +101,7 @@ class AbstractDataset(ABC, Dataset):
             fig, axs = plt.subplots(1, 2, figsize=(15, 5))
             axs[0].imshow(img)
             axs[0].set_title("Image")
-            axs[1].imshow(mask[:, :, 0], cmap="gray")
+            axs[1].imshow(mask[:, :, 0]*80, cmap="gray")
             axs[1].set_title("id_mask")
         else:
             if self.with_background:
@@ -126,6 +122,15 @@ class AbstractDataset(ABC, Dataset):
 
         plt.tight_layout()
         plt.show()
+
+    def get(self, idx: int, transform=None):
+        img_data = self.tiles_dicts[idx]
+        image_path = f'{self.image_dir}/train/{img_data["id"]}.tif'
+        image = Image.open(image_path)
+        mask = generate_mask(img_data, with_background=self.with_background)
+        if transform:
+            image, mask = transform(image, mask)
+        return image, mask
 
     @abstractmethod
     def __len__(self):
