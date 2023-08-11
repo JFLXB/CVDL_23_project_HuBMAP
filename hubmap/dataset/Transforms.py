@@ -13,7 +13,7 @@ class Compose:
         self.transforms = transforms
 
     def __call__(self, image, mask):
-        assert image.size == mask.size
+        #assert image.size == mask.size
         for t in self.transforms:
             image, mask = t(image, mask)
         return image, mask
@@ -116,4 +116,4 @@ class Normalize:
 
 class ToTensor:
     def __call__(self, image, mask):
-        return F.to_tensor(image), F.to_tensor(mask)
+        return F.to_tensor(np.array(image)), F.to_tensor(np.array(mask))
