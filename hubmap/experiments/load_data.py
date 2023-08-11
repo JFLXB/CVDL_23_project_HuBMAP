@@ -34,8 +34,9 @@ def make_annotated_loader(
     train_transformations: Compose,
     test_transformations: Compose,
     train_ratio: float = 0.8,
+    with_background: bool = False,
 ) -> Callable[[int], Tuple[DataLoader, DataLoader]]:
-    dataset = BaseDataset(DATA_DIR)
+    dataset = BaseDataset(DATA_DIR, with_background=with_background)
 
     train_size = int(train_ratio * len(dataset))
     test_size = len(dataset) - train_size

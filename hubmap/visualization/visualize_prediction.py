@@ -7,6 +7,7 @@ import random
 import matplotlib.pyplot as plt
 import scienceplots as _
 
+from skimage.color import label2rgb
 from hubmap.experiments.load_data import make_expert_loader
 from hubmap.experiments.load_data import make_annotated_loader
 from hubmap.dataset import transforms as T
@@ -21,53 +22,53 @@ class ImageType(StrEnum):
 
 
 def visualize_image(
-    model, checkpoint_name: str, image: str, target: str, pred_idx: int
+    model, checkpoint_name: str, image: torch.Tensor, target: torch.Tensor, transforms, pred_idx: int
 ):
     plt.style.use(["science"])
     checkpoint = torch.load(Path(CHECKPOINT_DIR / checkpoint_name))
 
-    image = torch.load(Path(image), map_location=torch.device("cpu"))
-    target = torch.load(Path(target), map_location=torch.device("cpu"))
+    if (len(image.size()) != 3) or (len(target.size()) != 3):
+        raise ValueError(f"Image and target must have 3 dimensions, but got {len(image.size())} and {len(target.size())}.")
 
     device = "cpu"
     model.load_state_dict(checkpoint["model_state_dict"])
     model = model.to(device)
     image = image.to(device)
-    prediction = get_prediction(model, image, pred_idx).detach().cpu()
+    
+    if transforms:
+        image, target = transforms(image, target)
+
+    model.eval()
+    with torch.no_grad():
+        image = image.unsqueeze(0)
+        prediction = model(image)
+        prediction = prediction[pred_idx] if pred_idx is not None else prediction
+        probs = F.softmax(prediction, dim=1)
+        pred_mask = torch.argmax(probs, dim=1).squeeze()
+
     image = image.cpu()
 
     iou = IoU(0)
     iou_score = iou(prediction, target)
+    
+    colors = {"blood_vessel": "red", "glomerulus": "blue", "unsure": "yellow"}
+    titles = {"blood_vessel": "Blood Vessel", "glomerulus": "Glomerulus", "unsure": "Unsure"}
+    
+    image_np = image.permute(1, 2, 0).squeeze().numpy()
+    target_argmax = target.argmax(dim=0)
+    target_np = target_argmax.numpy()
+    target_mask_img = label2rgb(target_np, image=None, bg_label=3, colors=colors.keys(), kind="overlay", saturation=1.0, alpha=0.3)
+    pred_mask_np = pred_mask.numpy()
+    pred_mask_img = label2rgb(pred_mask_np, image=None, bg_label=3, colors=colors.keys(), kind="overlay", saturation=1.0, alpha=0.3)
 
-    image = image[0].squeeze().permute(1, 2, 0)
-    target = target[0].permute(1, 2, 0)
-    # image = image[0].permute(1, 2, 0)
-    # target = target[0].permute(1, 2, 0)
-    prediction = prediction[0].permute(1, 2, 0)
-
-    fig, ax = plt.subplots(1, 3, figsize=(6, 5))
-    ax[0].imshow(image)
-    ax[0].set_title(f"Image")
-    # ax[0].imshow(target, alpha=0.4)
-
-    if target.size(2) < 3:
-        diff = 3 - target.shape[2]
-        ad = torch.zeros((target.size(0), target.size(1), diff))
-        target = torch.cat((target, ad), 2)
-
-    ax[1].imshow(target)
-    ax[1].set_title(f"Ground Truth")
-
-    # ax[1].imshow(image)
-    # print(prediction.size(2))
-    if prediction.size(2) < 3:
-        diff = 3 - prediction.shape[2]
-        ad = torch.zeros((prediction.size(0), prediction.size(1), diff))
-        prediction = torch.cat((prediction, ad), 2)
-
-    ax[2].imshow(prediction)
-    ax[2].set_title(f"Prediction / IoU: {(iou_score.item() * 100):.2f}%")
-    plt.tight_layout()
+    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(6, 5))
+    axs[0].imshow(image_np)
+    axs[0].set_title(f"Image")
+    axs[1].imshow(target_mask_img)
+    axs[1].set_title(f"Ground Truth")
+    axs[2].imshow(pred_mask_img)
+    axs[2].set_title(f"Prediction / IoU: {(iou_score.item() * 100):.2f}%")
+    fig.tight_layout()
     return fig
 
 
