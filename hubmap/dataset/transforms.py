@@ -15,7 +15,7 @@ class Compose:
         self.transforms = transforms
 
     def __call__(self, image, mask):
-        assert image.size == mask.size
+        #assert image.size == mask.size
         for t in self.transforms:
             image, mask = t(image, mask)
         return image, mask
@@ -130,12 +130,3 @@ class Normalize:
 class ToTensor:
     def __call__(self, image, mask):
         return F.to_tensor(np.array(image)), F.to_tensor(np.array(mask))
-
-
-class AddBackgroundToMask:
-    def __call__(self, image, mask):
-        background = (mask == 0).all(dim=0).type(torch.float32)
-        out = torch.zeros((mask.size(0) + 1, mask.size(1), mask.size(2)))
-        out[0] = background
-        out[1:] = mask
-        return image, out
