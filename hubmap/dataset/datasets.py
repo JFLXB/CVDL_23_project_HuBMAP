@@ -15,7 +15,6 @@ label2id = {"blood_vessel": 0, "glomerulus": 1, "unsure": 2, "background": 3}
 
 def generate_mask(img_data, with_background=False, as_id_mask=False):
     if as_id_mask:
-        #full 255s so all is background
         mask = np.full((512, 512, 1), 3, dtype=np.uint8)
     elif with_background:
         mask = np.zeros((512, 512, 4), dtype=np.uint8)
@@ -34,8 +33,9 @@ def generate_mask(img_data, with_background=False, as_id_mask=False):
             cv2.fillPoly(temp, [points], color=(255))
             channel = label2id[group["type"]]
             mask[:, :, channel] += temp
-    if with_background:
+    if with_background and not as_id_mask:
         background_channel = label2id["background"]
+        print(mask.shape)
         mask[:, :, background_channel] = 255 - np.sum(mask, axis=2)
 
     return mask
