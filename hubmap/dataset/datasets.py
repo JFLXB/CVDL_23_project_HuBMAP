@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import cv2
 import json
 import pandas as pd
+import os
 from abc import ABC, abstractmethod
 
 
@@ -35,7 +36,6 @@ def generate_mask(img_data, with_background=False, as_id_mask=False):
             mask[:, :, channel] += temp
     if with_background and not as_id_mask:
         background_channel = label2id["background"]
-        print(mask.shape)
         mask[:, :, background_channel] = 255 - np.sum(mask, axis=2)
 
     return mask
@@ -165,6 +165,45 @@ class BaseDataset(AbstractDataset):
             image, mask = self.transform(image, mask)
 
         return image, mask
+    
+
+class TrainTestValBaseDataset(AbstractDataset):
+    def __init__(self, image_dir, sub_dir, transform=None, with_background=False, as_id_mask=False):
+        super().__init__(image_dir, transform, with_background, as_id_mask)
+        self.sub_dir = sub_dir
+        self.ids = os.listdir(image_dir + sub_dir)
+        self.id_dict = {}
+        for dict in self.tiles_dicts:
+            self.id_dict[dict["id"]] = dict
+    def __len__(self):
+        return len(self.ids)
+    
+    def __getitem__(self, index):
+        image_id = self.ids[index]
+        img_data = self.id_dict[str(os.path.splitext(image_id)[0])]
+        image_path = f'{self.image_dir + self.sub_dir}/{image_id}'
+        image = np.asarray(Image.open(image_path))
+        mask = generate_mask(img_data, with_background=self.with_background, as_id_mask=self.as_id_mask)
+
+        if self.transform is not None:
+            image, mask = self.transform(image, mask)
+
+        return image, mask
+
+    
+class TrainDataset(TrainTestValBaseDataset):
+    def __init__(self, image_dir, transform=None, with_background=False, as_id_mask=False):
+        super().__init__(image_dir, 'train/', transform, with_background, as_id_mask)
+
+class TestDataset(TrainTestValBaseDataset):
+    def __init__(self, image_dir, transform=None, with_background=False, as_id_mask=False):
+        super().__init__(image_dir, 'test/', transform, with_background, as_id_mask)
+        assert False, "are you sure you want to bias yourself (╬ ಠ益ಠ) ? "
+
+class ValDataset(TrainTestValBaseDataset):
+    def __init__(self, image_dir, transform=None, with_background=False, as_id_mask=False):
+        super().__init__(image_dir, 'val/', transform, with_background, as_id_mask)
+
 
 
 def _gen_dict_from_json_list(lst):

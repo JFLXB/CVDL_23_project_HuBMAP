@@ -29,8 +29,8 @@ class Resize:
         self.size = size
 
     def __call__(self, image, target):
-        image = F.resize(image, self.size, interpolation=transforms.InterpolationMode.BILINEAR)
-        target = F.resize(target, self.size, interpolation=transforms.InterpolationMode.NEAREST)
+        image = F.resize(image, self.size, interpolation=transforms.InterpolationMode.BILINEAR, antialias=True)
+        target = F.resize(target, self.size, interpolation=transforms.InterpolationMode.NEAREST, antialias=True)
         return image, target
 
 
