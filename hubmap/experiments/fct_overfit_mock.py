@@ -95,15 +95,15 @@ image[:, 1, 0 : 4 * box_size, 3 * box_size : 4 * box_size] = 1
 image[:, 1, box_size : 2 * box_size, 0 : 4 * box_size] = 1
 image[:, 1, 3 * box_size : 4 * box_size, 0 : 4 * box_size] = 1
 
-target = torch.zeros((1, 2, IMG_DIM, IMG_DIM))
+target = torch.zeros((1, 1, IMG_DIM, IMG_DIM))
 target[:, 0, 0:box_size, 0:box_size] = 1
 target[:, 0, 2 * box_size : 3 * box_size, 0:box_size] = 1
 target[:, 0, 0:box_size, 2 * box_size : 3 * box_size] = 1
 target[:, 0, 2 * box_size : 3 * box_size, 2 * box_size : 3 * box_size] = 1
-# target[:, 1, 0 : 4 * box_size, box_size : 2 * box_size] = 1
-# target[:, 1, 0 : 4 * box_size, 3 * box_size : 4 * box_size] = 1
-# target[:, 1, box_size : 2 * box_size, 0 : 4 * box_size] = 1
-# target[:, 1, 3 * box_size : 4 * box_size, 0 : 4 * box_size] = 1
+target[:, 0, 0 : 4 * box_size, box_size : 2 * box_size] = 0
+target[:, 0, 0 : 4 * box_size, 3 * box_size : 4 * box_size] = 0
+target[:, 0, box_size : 2 * box_size, 0 : 4 * box_size] = 0
+target[:, 1, 3 * box_size : 4 * box_size, 0 : 4 * box_size] = 0
 
 
 # SAVE IMAGES

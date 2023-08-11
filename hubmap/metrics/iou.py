@@ -3,6 +3,7 @@ IoU Metric
 """
 import torch
 import torch.nn.functional as F
+import numpy as np
 
 
 class IoU:
@@ -10,7 +11,7 @@ class IoU:
 
     def __init__(
         self,
-        class_index: int,
+        class_index: int = None,
         reduction: str = "mean",
     ):
         self._classes_to_evaluate = class_index
@@ -40,16 +41,28 @@ class IoU:
         classes = torch.argmax(probs, dim=1, keepdims=True)
         classes_per_channel = torch.zeros_like(prediction)
         classes_per_channel.scatter_(1, classes, 1)
+        
+        if self._classes_to_evaluate:
+            prediction_bv = classes_per_channel[:, self._classes_to_evaluate, :, :]
+            target_bv = target[:, self._classes_to_evaluate, :, :]
+            intersection = torch.logical_and(prediction_bv, target_bv)
+            union = torch.logical_or(prediction_bv, target_bv)
+            iou_score = torch.sum(intersection, dim=(1, 2)) / torch.sum(union, dim=(1, 2))
+        else:
+            scores = torch.zeros(classes_per_channel.size(1))
+            for i in range(classes_per_channel.size(1)):
+                prediction_bv = classes_per_channel[:, i, :, :]
+                target_bv = target[:, i, :, :]
+                intersection = torch.logical_and(prediction_bv, target_bv)
+                union = torch.logical_or(prediction_bv, target_bv)
+                iou_score = torch.sum(intersection, dim=(1, 2)) / torch.sum(union, dim=(1, 2))
+                scores[i] = iou_score.item()
+            iou_score = torch.mean(scores)
 
-        prediction_bv = classes_per_channel[:, self._classes_to_evaluate, :, :]
-        target_bv = target[:, self._classes_to_evaluate, :, :]
-        intersection = torch.logical_and(prediction_bv, target_bv)
-        union = torch.logical_or(prediction_bv, target_bv)
-        iou_score = torch.sum(intersection, dim=(1, 2)) / torch.sum(union, dim=(1, 2))
         # print(iou_score.size())
         # print(iou_score)
 
-        iou_score = torch.nan_to_num(iou_score, nan=0.0, posinf=0.0, neginf=0.0)
+        # iou_score = torch.nan_to_num(iou_score, nan=0.0, posinf=0.0, neginf=0.0)
 
         # intersection = torch.logical_and(prediction, target)
         # union = torch.logical_or(prediction, target)

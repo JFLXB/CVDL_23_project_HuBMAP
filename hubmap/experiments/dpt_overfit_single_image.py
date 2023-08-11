@@ -13,8 +13,8 @@ from hubmap.training import LRScheduler
 
 # from hubmap.training import EarlyStopping
 
-from hubmap.models import FCT
-from hubmap.models.fct import init_weights
+from hubmap.models import DPT
+# from hubmap.models.fct import init_weights
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -66,18 +66,19 @@ transformations = T.Compose(
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 checkpoint_name = (
-    f"fct_overfit_img_size_{args.image_size}.pt"
+    f"dpt_overfit_single_image.pt"
 )
 
-model = FCT(in_channels=3, num_classes=NUM_CLASSES).to(device)
-model.apply(init_weights)
+# model = FCT(in_channels=3, num_classes=NUM_CLASSES).to(device)
+# model.apply(init_weights)
+model = DPT(num_classes=NUM_CLASSES, features=128).to(device)
 
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
 # criterion = MultiOutputBCELoss(
 #     weights=[0.14, 0.29, 0.57], interpolation_strategy="bilinear"
 # )
-# criterion = BCEDiceLoss()
-criterion = nn.BCELoss()
+criterion = BCEDiceLoss()
+# criterion = nn.BCELoss()
 
 # WE ARE ONLY INTERESTED IN THE IoU OF THE BLOOD VESSEL CLASS FOR NOW.
 # benchmark = IoU(class_index=0)
@@ -106,6 +107,6 @@ result = train(
     benchmark=benchmark,
     checkpoint_name=checkpoint_name,
     # learning_rate_scheduler=lr_scheduler,
-    loss_out_index=2,
-    benchmark_out_index=2,
+    # loss_out_index=2,
+    # benchmark_out_index=2,
 )
