@@ -5,6 +5,8 @@ import torch
 import torch.nn.functional as F
 import random
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import seaborn as sns
 import scienceplots as _
 
 from skimage.color import label2rgb
@@ -22,52 +24,127 @@ class ImageType(StrEnum):
 
 
 def visualize_image(
-    model, checkpoint_name: str, image: torch.Tensor, target: torch.Tensor, transforms, pred_idx: int
+    model,
+    checkpoint_name: str,
+    image: torch.Tensor,
+    target: torch.Tensor,
+    transforms,
+    pred_idx: int,
+    overlay: bool = False,
+    grayscale: bool = False,
+    legend: bool = True,
+    title: bool = True,
 ):
     plt.style.use(["science"])
     checkpoint = torch.load(Path(CHECKPOINT_DIR / checkpoint_name))
 
     if (len(image.size()) != 3) or (len(target.size()) != 3):
-        raise ValueError(f"Image and target must have 3 dimensions, but got {len(image.size())} and {len(target.size())}.")
+        raise ValueError(
+            f"Image and target must have 3 dimensions, but got {len(image.size())} and {len(target.size())}."
+        )
 
     device = "cpu"
     model.load_state_dict(checkpoint["model_state_dict"])
     model = model.to(device)
     image = image.to(device)
-    
+
     if transforms:
-        image, target = transforms(image, target)
+        img, target = transforms(image, target)
 
     model.eval()
     with torch.no_grad():
-        image = image.unsqueeze(0)
-        prediction = model(image)
+        prediction = model(img.unsqueeze(0))
         prediction = prediction[pred_idx] if pred_idx is not None else prediction
         probs = F.softmax(prediction, dim=1)
         pred_mask = torch.argmax(probs, dim=1).squeeze()
+        classes = torch.argmax(probs, dim=1, keepdims=True)
+        classes_per_channel = torch.zeros_like(prediction)
+        classes_per_channel.scatter_(1, classes, 1)
 
     image = image.cpu()
 
     iou = IoU(0)
-    iou_score = iou(prediction, target)
-    
+    iou_score = iou(classes_per_channel, target.unsqueeze(0))
+
     colors = {"blood_vessel": "red", "glomerulus": "blue", "unsure": "yellow"}
-    titles = {"blood_vessel": "Blood Vessel", "glomerulus": "Glomerulus", "unsure": "Unsure"}
-    
+    titles = {
+        "blood_vessel": "Blood Vessel",
+        "glomerulus": "Glomerulus",
+        "unsure": "Unsure",
+    }
+
     image_np = image.permute(1, 2, 0).squeeze().numpy()
     target_argmax = target.argmax(dim=0)
     target_np = target_argmax.numpy()
-    target_mask_img = label2rgb(target_np, image=None, bg_label=3, colors=colors.keys(), kind="overlay", saturation=1.0, alpha=0.3)
-    pred_mask_np = pred_mask.numpy()
-    pred_mask_img = label2rgb(pred_mask_np, image=None, bg_label=3, colors=colors.keys(), kind="overlay", saturation=1.0, alpha=0.3)
 
-    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(6, 5))
-    axs[0].imshow(image_np)
-    axs[0].set_title(f"Image")
-    axs[1].imshow(target_mask_img)
-    axs[1].set_title(f"Ground Truth")
-    axs[2].imshow(pred_mask_img)
-    axs[2].set_title(f"Prediction / IoU: {(iou_score.item() * 100):.2f}%")
+    if not overlay:
+        target_mask_img = label2rgb(
+            target_np, image=None, bg_label=3, colors=colors.values(), kind="overlay"
+        )
+        pred_mask_np = pred_mask.numpy()
+        pred_mask_img = label2rgb(
+            pred_mask_np, image=None, bg_label=3, colors=colors.values(), kind="overlay"
+        )
+
+        fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(6, 2.5))
+        axs[0].imshow(image_np)
+        axs[0].set_title(f"Image")
+        axs[1].imshow(target_mask_img)
+        axs[1].set_title(f"Ground Truth")
+        axs[2].imshow(pred_mask_img)
+        axs[2].set_title(f"Prediction")
+    else:
+        saturation = 0.0 if grayscale else 1.0
+        target_mask_img = label2rgb(
+            target_np,
+            image=image_np,
+            bg_label=3,
+            colors=colors.values(),
+            kind="overlay",
+            saturation=saturation,
+            alpha=0.4,
+        )
+        pred_mask_np = pred_mask.numpy()
+        pred_mask_img = label2rgb(
+            pred_mask_np,
+            image=image_np,
+            bg_label=3,
+            colors=colors.values(),
+            kind="overlay",
+            saturation=saturation,
+            alpha=0.4,
+        )
+
+        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(4, 2.5))
+        axs[0].imshow(target_mask_img)
+        axs[0].set_title(f"Ground Truth")
+        axs[1].imshow(pred_mask_img)
+        axs[1].set_title(f"Prediction")
+
+    if legend:
+        blood_vessel_patch = mpatches.Patch(
+            facecolor=colors["blood_vessel"],
+            label=titles["blood_vessel"],
+            edgecolor="black",
+        )
+        glomerulus_patch = mpatches.Patch(
+            facecolor=colors["glomerulus"],
+            label=titles["glomerulus"],
+            edgecolor="black",
+        )
+        unsure_patch = mpatches.Patch(
+            facecolor=colors["unsure"], label=titles["unsure"], edgecolor="black"
+        )
+        handles = [blood_vessel_patch, glomerulus_patch, unsure_patch]
+        # fig.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5))
+        fig.legend(
+            handles=handles, loc="upper center", bbox_to_anchor=(0.5, 0.05), ncol=3
+        )
+
+    if title:
+        fig.suptitle(f"{checkpoint_name} / IoU: {(iou_score.item() * 100):.2f}%")
+    else:
+        print("IoU: ", iou_score.item())
     fig.tight_layout()
     return fig
 
