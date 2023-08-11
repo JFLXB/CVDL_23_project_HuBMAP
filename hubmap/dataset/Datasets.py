@@ -7,6 +7,7 @@ import cv2
 import json
 import pandas as pd 
 from abc import ABC, abstractmethod
+import torch
 
 def generate_mask(img_data):
     mask = np.zeros((512, 512,3), dtype=np.uint8)
@@ -78,22 +79,31 @@ class AbstractDataset(ABC, Dataset):
 
     #plots a example after transformation i.e. the transformed image and all three masksk
     def plot_example(self, idx):
-        img, mask = self[idx]
+        img, mask, target = self[idx]
         img = img.permute(1, 2, 0).numpy()
         mask = mask.permute(1, 2, 0).numpy()
 
         fig, axs = plt.subplots(1, 4, figsize=(15, 5))
         axs[0].imshow(img)
         axs[0].set_title("Image")
-        axs[1].imshow(mask[:,:,0], cmap='gray')
+        axs[1].imshow(mask[:, :, 0], cmap='gray')
         axs[1].set_title("blood_vessel mask")
-        axs[2].imshow(mask[:,:,1], cmap='gray')
+        axs[2].imshow(mask[:, :, 1], cmap='gray')
         axs[2].set_title("glomerulus mask")
-        axs[3].imshow(mask[:,:,2], cmap='gray')
+        axs[3].imshow(mask[:, :, 2], cmap='gray')
         axs[3].set_title("unsure mask")
 
         plt.tight_layout()
+
+        # Plot bounding boxes and labels
+        for box, label in zip(target["boxes"], target["labels"]):
+            x_min, y_min, x_max, y_max = box
+            rect = mpatches.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min, fill=False, edgecolor='blue', linewidth=2)
+            axs[0].add_patch(rect)
+            axs[0].text(x_min, y_min - 10, f'Class: {label}', color='blue', fontsize=10, bbox={'color': 'white', 'alpha': 0.7, 'pad': 0})
+
         plt.show()
+
 
     @abstractmethod
     def __len__(self):
@@ -124,11 +134,31 @@ class BaseDataset(AbstractDataset):
         image = np.asarray(Image.open(image_path))
         mask = generate_mask(img_data)
 
+        # Extract bounding box coordinates and labels
+        boxes = []
+        labels = []
+
+        for annotation in img_data["annotations"]:
+            if annotation["type"] == "blood_vessel":
+                coordinates = annotation["coordinates"][0]
+                x1, y1 = np.min(coordinates, axis=0)
+                x2, y2 = np.max(coordinates, axis=0)
+                boxes.append([x1, y1, x2, y2])
+                labels.append(0)  # Class label for blood vessel
+
+        # Construct target dictionary
+        target = {
+            "boxes": torch.tensor(boxes, dtype=torch.float32),
+            "labels": torch.tensor(labels, dtype=torch.int64),
+        }
+
         if self.transform is not None:
-            image, mask = self.transform(image, mask) 
-            
-        return image, mask
-    
+            image = self.transform(image)
+            mask = self.transform(mask)
+
+        return image, mask, target  # Return image and target dictionary
+
+
 
 def _gen_dict_from_json_list(lst):
     out = dict()
