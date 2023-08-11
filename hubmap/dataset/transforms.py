@@ -1,6 +1,7 @@
 from torchvision.transforms import functional as F
 from torchvision import transforms
 import random
+import torch
 import numpy as np
 
 
@@ -129,3 +130,12 @@ class Normalize:
 class ToTensor:
     def __call__(self, image, mask):
         return F.to_tensor(np.array(image)), F.to_tensor(np.array(mask))
+
+
+class AddBackgroundToMask:
+    def __call__(self, image, mask):
+        background = (mask == 0).all(dim=0).type(torch.float32)
+        out = torch.zeros((mask.size(0) + 1, mask.size(1), mask.size(2)))
+        out[0] = background
+        out[1:] = mask
+        return image, out

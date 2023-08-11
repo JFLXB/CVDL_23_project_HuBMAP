@@ -40,7 +40,9 @@ def visualize_image(
     iou_score = iou(prediction, target)
 
     image = image[0].squeeze().permute(1, 2, 0)
-    target = target[0].squeeze().permute(1, 2, 0)
+    target = target[0].permute(1, 2, 0)
+    # image = image[0].permute(1, 2, 0)
+    # target = target[0].permute(1, 2, 0)
     prediction = prediction[0].permute(1, 2, 0)
 
     fig, ax = plt.subplots(1, 3, figsize=(6, 5))
@@ -57,7 +59,7 @@ def visualize_image(
     ax[1].set_title(f"Ground Truth")
 
     # ax[1].imshow(image)
-    print(prediction.size(2))
+    # print(prediction.size(2))
     if prediction.size(2) < 3:
         diff = 3 - prediction.shape[2]
         ad = torch.zeros((prediction.size(0), prediction.size(1), diff))
@@ -88,21 +90,22 @@ def visualize_random_image(
     image = image.to(device)
 
     prediction = get_prediction(model, image, pred_idx).detach().cpu()
+    print(prediction.size())
     image = image.cpu()
 
-    iou = IoU(0)
+    iou = IoU(1)
     iou_score = iou(prediction, target)
 
     image = image[0].squeeze().permute(1, 2, 0)
     target = target[0].squeeze().permute(1, 2, 0)
-    prediction = prediction.permute(1, 2, 0)
+    prediction = prediction[0].permute(1, 2, 0)
 
     fig, ax = plt.subplots(1, 3, figsize=(6, 5))
     ax[0].imshow(image)
     ax[0].set_title(f"Image")
-    ax[1].imshow(target)
+    ax[1].imshow(target.argmax(dim=2, keepdims=True))
     ax[1].set_title(f"Ground Truth")
-    ax[2].imshow(prediction)
+    ax[2].imshow(prediction.argmax(dim=2, keepdims=True))
     ax[2].set_title(f"Prediction / IoU: {(iou_score.item() * 100):.2f}%")
     # fig.suptitle(f"IoU: {(iou_score.item() * 100):.2f}%")
     plt.tight_layout()
@@ -128,6 +131,7 @@ def get_random_image_and_target(image_type: ImageType, seed: Optional[int] = Non
     train_transformations = T.Compose(
         [
             T.ToTensor(),
+            # T.AddBackgroundToMask(),
             T.Resize((IMG_DIM, IMG_DIM)),
             T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
         ]
@@ -136,6 +140,7 @@ def get_random_image_and_target(image_type: ImageType, seed: Optional[int] = Non
     test_transformations = T.Compose(
         [
             T.ToTensor(),
+            # T.AddBackgroundToMask(),
             T.Resize((IMG_DIM, IMG_DIM)),
             T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
         ]

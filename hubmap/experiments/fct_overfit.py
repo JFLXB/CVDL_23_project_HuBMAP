@@ -83,7 +83,7 @@ benchmark = IoU(class_index=0)
 lr_scheduler = LRScheduler(optimizer, patience=5, min_lr=1e-6, factor=0.8)
 # early_stopping = EarlyStopping(patience=50, min_delta=0.0)
 
-image = torch.zeros((1, 3, IMG_DIM, IMG_DIM))
+# image = torch.zeros((1, 3, IMG_DIM, IMG_DIM))
 box_size = IMG_DIM // 4
 image = torch.zeros((1, 3, IMG_DIM, IMG_DIM))
 image[:, 0, 0:box_size, 0:box_size] = 1
@@ -100,10 +100,10 @@ target[:, 0, 0:box_size, 0:box_size] = 1
 target[:, 0, 2 * box_size : 3 * box_size, 0:box_size] = 1
 target[:, 0, 0:box_size, 2 * box_size : 3 * box_size] = 1
 target[:, 0, 2 * box_size : 3 * box_size, 2 * box_size : 3 * box_size] = 1
-target[:, 1, 0 : 4 * box_size, box_size : 2 * box_size] = 1
-target[:, 1, 0 : 4 * box_size, 3 * box_size : 4 * box_size] = 1
-target[:, 1, box_size : 2 * box_size, 0 : 4 * box_size] = 1
-target[:, 1, 3 * box_size : 4 * box_size, 0 : 4 * box_size] = 1
+# target[:, 1, 0 : 4 * box_size, box_size : 2 * box_size] = 1
+# target[:, 1, 0 : 4 * box_size, 3 * box_size : 4 * box_size] = 1
+# target[:, 1, box_size : 2 * box_size, 0 : 4 * box_size] = 1
+# target[:, 1, 3 * box_size : 4 * box_size, 0 : 4 * box_size] = 1
 
 
 # SAVE IMAGES

@@ -1,5 +1,6 @@
 import argparse
 import torch
+import torch.nn as nn
 import torch.optim as optim
 
 from hubmap.experiments.load_data import make_annotated_loader
@@ -45,6 +46,7 @@ NUM_EPOCHS = args.epochs
 train_transformations = T.Compose(
     [
         T.ToTensor(),
+        T.AddBackgroundToMask(),
         T.Resize((IMG_DIM, IMG_DIM)),
         T.RandomHorizontalFlip(),
         T.RandomVerticalFlip(),
@@ -56,6 +58,7 @@ train_transformations = T.Compose(
 test_transformations = T.Compose(
     [
         T.ToTensor(),
+        T.AddBackgroundToMask(),
         T.Resize((IMG_DIM, IMG_DIM)),
         T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ]
@@ -68,16 +71,17 @@ checkpoint_name = (
     f"fct_trial_batch_size_{args.batch_size}_img_size_{args.image_size}.pt"
 )
 
-model = FCT(in_channels=3, num_classes=3).to(device)
+model = FCT(in_channels=3, num_classes=4).to(device)
 model.apply(init_weights)
 
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
-criterion = MultiOutputBCELoss(
-    weights=[0.14, 0.29, 0.57], interpolation_strategy="bilinear"
-)
+# criterion = MultiOutputBCELoss(
+#     weights=[0.14, 0.29, 0.57], interpolation_strategy="bilinear"
+# )
+criterion = nn.BCELoss()
 
 # WE ARE ONLY INTERESTED IN THE IoU OF THE BLOOD VESSEL CLASS FOR NOW.
-benchmark = IoU(class_index=0)
+benchmark = IoU(class_index=1)
 train_loader, test_loader = load_annotated_data(BATCH_SIZE)
 lr_scheduler = LRScheduler(optimizer, patience=20, min_lr=1e-6, factor=0.8)
 # early_stopping = EarlyStopping(patience=50, min_delta=0.0)
@@ -92,6 +96,6 @@ result = train(
     benchmark=benchmark,
     checkpoint_name=checkpoint_name,
     learning_rate_scheduler=lr_scheduler,
-    loss_out_index=None,
+    loss_out_index=2,
     benchmark_out_index=2,
 )

@@ -48,6 +48,8 @@ class IoU:
         iou_score = torch.sum(intersection, dim=(1, 2)) / torch.sum(union, dim=(1, 2))
         # print(iou_score.size())
         # print(iou_score)
+        
+        iou_score = torch.nan_to_num(iou_score, nan=0.0, posinf=0.0, neginf=0.0)
 
         # intersection = torch.logical_and(prediction, target)
         # union = torch.logical_or(prediction, target)
