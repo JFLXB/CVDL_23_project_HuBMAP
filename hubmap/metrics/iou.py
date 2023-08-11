@@ -37,7 +37,7 @@ class IoU:
             _description_
         """
         # prediction = prediction[2]
-        probs = F.softmax(prediction.type(torch.float32), dim=1)
+        probs = F.sigmoid(prediction.type(torch.float32))
         classes = torch.argmax(probs, dim=1, keepdims=True)
         classes_per_channel = torch.zeros_like(prediction)
         classes_per_channel.scatter_(1, classes, 1)
@@ -47,7 +47,10 @@ class IoU:
             target_bv = target[:, self._classes_to_evaluate, :, :]
             intersection = torch.logical_and(prediction_bv, target_bv)
             union = torch.logical_or(prediction_bv, target_bv)
-            iou_score = torch.sum(intersection, dim=(1, 2)) / torch.sum(union, dim=(1, 2))
+            if torch.sum(union).item() == 0:
+                iou_score = torch.tensor(0.0)
+            else:
+                iou_score = torch.sum(intersection, dim=(1, 2)) / torch.sum(union, dim=(1, 2))
         else:
             scores = torch.zeros(classes_per_channel.size(1))
             for i in range(classes_per_channel.size(1)):
@@ -55,7 +58,10 @@ class IoU:
                 target_bv = target[:, i, :, :]
                 intersection = torch.logical_and(prediction_bv, target_bv)
                 union = torch.logical_or(prediction_bv, target_bv)
-                iou_score = torch.sum(intersection, dim=(1, 2)) / torch.sum(union, dim=(1, 2))
+                if torch.sum(union).item() == 0:
+                    iou_score = torch.tensor(0.0)
+                else:
+                    iou_score = torch.sum(intersection, dim=(1, 2)) / torch.sum(union, dim=(1, 2))
                 scores[i] = iou_score.item()
             iou_score = torch.mean(scores)
 

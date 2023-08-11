@@ -1,6 +1,7 @@
 from typing import Optional
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 
 from torch.utils.data import DataLoader
@@ -98,6 +99,9 @@ def train(
 
             optimizer.zero_grad()
             predictions = model(images)
+            # print(predictions[2].size())
+            # print(predictions[2].sigmoid().size())
+            # assert False
             preds_for_loss = (
                 predictions[loss_out_index]
                 if loss_out_index is not None
@@ -109,6 +113,7 @@ def train(
                 else predictions
             )
 
+            # preds_for_loss = F.softmax(preds_for_loss, dim=1)
             loss = criterion(preds_for_loss, targets)
             loss.backward()
             optimizer.step()
@@ -141,6 +146,7 @@ def train(
                     if benchmark_out_index is not None
                     else predictions
                 )
+                preds_for_loss = F.softmax(preds_for_loss, dim=1)
                 loss = criterion(preds_for_loss, targets)
                 metric = benchmark(preds_for_benchmark, targets)
 

@@ -6,10 +6,11 @@ class BCEDiceLoss(nn.Module):
     def __init__(self, weight=None, size_average=True):
         super(BCEDiceLoss, self).__init__()
 
-    def forward(self, inputs, targets, smooth=1):
-        inputs = F.sigmoid(inputs)
+    def forward(self, predictions, targets, smooth=1):
+        predictions = F.softmax(predictions)
         inputs = inputs.reshape(-1)
         targets = targets.reshape(-1)
+        
 
         intersection = (inputs * targets).sum()
         dice_loss = 1 - (2.0 * intersection + smooth) / (

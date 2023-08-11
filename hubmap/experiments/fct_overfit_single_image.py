@@ -69,7 +69,7 @@ checkpoint_name = (
     f"fct_overfit_img_size_{args.image_size}.pt"
 )
 
-model = FCT(in_channels=3, num_classes=NUM_CLASSES).to(device)
+model = FCT(in_channels=3, num_classes=2).to(device)
 model.apply(init_weights)
 
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
@@ -81,9 +81,9 @@ criterion = nn.BCELoss()
 
 # WE ARE ONLY INTERESTED IN THE IoU OF THE BLOOD VESSEL CLASS FOR NOW.
 # benchmark = IoU(class_index=0)
-benchmark = IoU()
+benchmark = IoU(1)
 # train_loader, test_loader = load_annotated_data(BATCH_SIZE)
-# lr_scheduler = LRScheduler(optimizer, patience=20, min_lr=1e-6, factor=0.8)
+lr_scheduler = LRScheduler(optimizer, patience=20, min_lr=1e-8, factor=0.5)
 # early_stopping = EarlyStopping(patience=50, min_delta=0.0)
 
 from hubmap.dataset import BaseDataset
@@ -91,6 +91,8 @@ from hubmap.data import DATA_DIR
 dataset = BaseDataset(DATA_DIR, transform=transformations, with_background=True)
 image, target = dataset[0]
 image, target = image.unsqueeze(0).to(device), target.unsqueeze(0).to(device)
+target = target[:, :2, :, :]
+print(target.size())
 
 train_loader = [(image, target)]
 test_loader = [(image, target)]
@@ -105,7 +107,7 @@ result = train(
     device=device,
     benchmark=benchmark,
     checkpoint_name=checkpoint_name,
-    # learning_rate_scheduler=lr_scheduler,
+    learning_rate_scheduler=lr_scheduler,
     loss_out_index=2,
     benchmark_out_index=2,
 )

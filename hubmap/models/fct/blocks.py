@@ -272,5 +272,8 @@ class DS_out(nn.Module):
         x1 = F.relu(self.conv1(x1))
         x1 = F.relu(self.conv2(x1))
         out = torch.sigmoid(self.conv3(x1))
-
         return out
+        # TODO: changed from the original....
+        x1 = self.conv3(x1)
+        # print(x1.min(), x1.max())
+        return x1

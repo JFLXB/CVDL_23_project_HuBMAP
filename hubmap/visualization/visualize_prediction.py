@@ -55,15 +55,19 @@ def visualize_image(
     with torch.no_grad():
         prediction = model(img.unsqueeze(0))
         prediction = prediction[pred_idx] if pred_idx is not None else prediction
-        probs = F.softmax(prediction, dim=1)
-        pred_mask = torch.argmax(probs, dim=1).squeeze()
-        classes = torch.argmax(probs, dim=1, keepdims=True)
+        # probs = F.sigmoid(prediction)
+        print(prediction.size())
+        pred_mask = torch.max(prediction, dim=1)[0].squeeze()
+        print(pred_mask.unique())
+        classes = torch.argmax(prediction, dim=1, keepdims=True)
         classes_per_channel = torch.zeros_like(prediction)
-        classes_per_channel.scatter_(1, classes, 1)
+        classes_per_channel.scatter_(1, classes, 1)\
+            
+    plt.imshow(pred_mask)
 
     image = image.cpu()
 
-    iou = IoU(0)
+    iou = IoU(1)
     iou_score = iou(classes_per_channel, target.unsqueeze(0))
 
     colors = {"blood_vessel": "red", "glomerulus": "blue", "unsure": "yellow"}
@@ -76,14 +80,14 @@ def visualize_image(
     image_np = image.permute(1, 2, 0).squeeze().numpy()
     target_argmax = target.argmax(dim=0)
     target_np = target_argmax.numpy()
-
+    
     if not overlay:
         target_mask_img = label2rgb(
-            target_np, image=None, bg_label=3, colors=colors.values(), kind="overlay"
+            target_np, image=None, bg_label=0, colors=colors.values(), kind="overlay"
         )
         pred_mask_np = pred_mask.numpy()
         pred_mask_img = label2rgb(
-            pred_mask_np, image=None, bg_label=3, colors=colors.values(), kind="overlay"
+            pred_mask_np, image=None, bg_label=0, colors=colors.values(), kind="overlay"
         )
 
         fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(6, 2.5))
@@ -94,6 +98,7 @@ def visualize_image(
         axs[2].imshow(pred_mask_img)
         axs[2].set_title(f"Prediction")
     else:
+        assert False, "Not implemented yet."
         saturation = 0.0 if grayscale else 1.0
         target_mask_img = label2rgb(
             target_np,
