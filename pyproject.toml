@@ -6,7 +6,7 @@ authors = [
     "Jonas Blenninger <jonas@blenninger.de>",
     "Christian Bernhard <christianbernhard089@gmail.com>",
     "Batuhan Gül <gulbatu3@googlemail.com>",
-    "Thomas Ziereis <thomas.ziereis@gmail.com>"
+    "Thomas Ziereis <thomas.ziereis@gmail.com>",
 ]
 readme = "README.md"
 
@@ -18,8 +18,18 @@ seaborn = "^0.12.2"
 scienceplots = "^2.1.0"
 numpy = "^1.24.3"
 pandas = "^2.0.2"
-ipykernel = "^6.23.2"
 torchvision = "^0.15.2"
+black = "^23.7.0"
+notebook = "^7.0.2"
+timm = "^0.9.2"
+opencv-python = "^4.7.0.72"
+tqdm = "^4.65.0"
+ipywidgets = "^8.1.0"
+ipykernel = "^6.25.0"
+ipython = "^8.14.0"
+pytorch-lightning = "^2.0.6"
+lightning = "^2.0.6"
+scikit-image = "^0.21.0"
 
 [build-system]
 requires = ["poetry-core"]
