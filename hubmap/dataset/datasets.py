@@ -127,7 +127,7 @@ class AbstractDataset(ABC, Dataset):
         img_data = self.tiles_dicts[idx]
         image_path = f'{self.image_dir}/train/{img_data["id"]}.tif'
         image = Image.open(image_path)
-        mask = generate_mask(img_data, with_background=self.with_background)
+        mask = generate_mask(img_data, with_background=self.with_background, as_id_mask=self.as_id_mask)
         if transform:
             image, mask = transform(image, mask)
         return image, mask
@@ -189,6 +189,19 @@ class TrainTestValBaseDataset(AbstractDataset):
             image, mask = self.transform(image, mask)
 
         return image, mask
+    
+    def get(self, idx: int, transform=None):
+        image_id = self.ids[idx]
+        img_data = self.id_dict[str(os.path.splitext(image_id)[0])]
+        image_path = f'{self.image_dir + self.sub_dir}/{image_id}'
+        image = np.asarray(Image.open(image_path))
+        mask = generate_mask(img_data, with_background=self.with_background, as_id_mask=self.as_id_mask)
+
+        if transform is not None:
+            image, mask = transform(image, mask)
+
+        return image, mask
+    
 
     
 class TrainDataset(TrainTestValBaseDataset):
