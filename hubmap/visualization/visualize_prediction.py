@@ -6,14 +6,18 @@ import torch.nn.functional as F
 import random
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-import seaborn as sns
 import scienceplots as _
+import numpy as np
+import PIL
 
 from skimage.color import label2rgb
 from hubmap.experiments.load_data import make_expert_loader
 from hubmap.experiments.load_data import make_annotated_loader
 from hubmap.dataset import transforms as T
+from hubmap.dataset import label2id, label2title
 from hubmap.metrics import IoU
+
+from hubmap.visualization.visualize_mask import mask_to_rgb, mask_to_rgba
 
 from checkpoints import CHECKPOINT_DIR
 
@@ -34,6 +38,10 @@ def visualize_image(
     grayscale: bool = False,
     legend: bool = True,
     title: bool = True,
+    activation_fun=None,
+    cmap: dict = None,
+    saturation: float = 0.7,
+    alpha: float = 0.6,
 ):
     plt.style.use(["science"])
     checkpoint = torch.load(Path(CHECKPOINT_DIR / checkpoint_name))
@@ -55,93 +63,77 @@ def visualize_image(
     with torch.no_grad():
         prediction = model(img.unsqueeze(0))
         prediction = prediction[pred_idx] if pred_idx is not None else prediction
-        # probs = F.sigmoid(prediction)
-        print(prediction.size())
-        pred_mask = torch.max(prediction, dim=1)[0].squeeze()
-        print(pred_mask.unique())
+
+        if activation_fun:
+            prediction = activation_fun(prediction)
+
         classes = torch.argmax(prediction, dim=1, keepdims=True)
         classes_per_channel = torch.zeros_like(prediction)
-        classes_per_channel.scatter_(1, classes, 1)\
-            
-    plt.imshow(pred_mask)
+        classes_per_channel.scatter_(1, classes, 1)
+        classes_per_channel = classes_per_channel.squeeze(0)
 
     image = image.cpu()
 
-    iou = IoU(1)
-    iou_score = iou(classes_per_channel, target.unsqueeze(0))
+    iou = IoU()
+    iou_score = iou(classes_per_channel, target)
 
-    colors = {"blood_vessel": "red", "glomerulus": "blue", "unsure": "yellow"}
-    titles = {
-        "blood_vessel": "Blood Vessel",
-        "glomerulus": "Glomerulus",
-        "unsure": "Unsure",
+    colors = {
+        "blood_vessel": "tomato",
+        "glomerulus": "dodgerblue",
+        "unsure": "palegreen",
+        "background": "black",
     }
+    colors = colors if cmap is None else cmap
+    cmap = {label2id[l]: colors[l] for l in colors.keys()}
 
     image_np = image.permute(1, 2, 0).squeeze().numpy()
-    target_argmax = target.argmax(dim=0)
-    target_np = target_argmax.numpy()
-    
+
     if not overlay:
-        target_mask_img = label2rgb(
-            target_np, image=None, bg_label=0, colors=colors.values(), kind="overlay"
-        )
-        pred_mask_np = pred_mask.numpy()
-        pred_mask_img = label2rgb(
-            pred_mask_np, image=None, bg_label=0, colors=colors.values(), kind="overlay"
-        )
+        target_mask_rgb = mask_to_rgb(target, color_map=cmap, bg_channel=3)
+        pred_mask_rgb = mask_to_rgb(classes_per_channel, color_map=cmap, bg_channel=3)
 
         fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(6, 2.5))
         axs[0].imshow(image_np)
         axs[0].set_title(f"Image")
-        axs[1].imshow(target_mask_img)
+        axs[1].imshow(target_mask_rgb.permute(1, 2, 0))
         axs[1].set_title(f"Ground Truth")
-        axs[2].imshow(pred_mask_img)
+        axs[2].imshow(pred_mask_rgb.permute(1, 2, 0))
         axs[2].set_title(f"Prediction")
     else:
-        assert False, "Not implemented yet."
-        saturation = 0.0 if grayscale else 1.0
-        target_mask_img = label2rgb(
-            target_np,
-            image=image_np,
-            bg_label=3,
-            colors=colors.values(),
-            kind="overlay",
-            saturation=saturation,
-            alpha=0.4,
+        image = PIL.Image.fromarray(np.uint8(image_np) * 255)
+        image = image.convert("LA") if grayscale else image.convert("RGBA")
+        image.putalpha(int(255 * saturation))
+
+        target_mask_rgb = mask_to_rgba(
+            target, color_map=cmap, bg_channel=3, alpha=alpha
         )
-        pred_mask_np = pred_mask.numpy()
-        pred_mask_img = label2rgb(
-            pred_mask_np,
-            image=image_np,
-            bg_label=3,
-            colors=colors.values(),
-            kind="overlay",
-            saturation=saturation,
-            alpha=0.4,
+        pred_mask_rgb = mask_to_rgba(
+            classes_per_channel, color_map=cmap, bg_channel=3, alpha=alpha
         )
 
         fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(4, 2.5))
-        axs[0].imshow(target_mask_img)
+        axs[0].imshow(image, cmap="gray") if grayscale else axs[0].imshow(image_np)
+        axs[0].imshow(target_mask_rgb.permute(1, 2, 0))
         axs[0].set_title(f"Ground Truth")
-        axs[1].imshow(pred_mask_img)
+        axs[1].imshow(image, cmap="gray") if grayscale else axs[0].imshow(image_np)
+        axs[1].imshow(pred_mask_rgb.permute(1, 2, 0))
         axs[1].set_title(f"Prediction")
 
     if legend:
         blood_vessel_patch = mpatches.Patch(
             facecolor=colors["blood_vessel"],
-            label=titles["blood_vessel"],
+            label=label2title["blood_vessel"],
             edgecolor="black",
         )
         glomerulus_patch = mpatches.Patch(
             facecolor=colors["glomerulus"],
-            label=titles["glomerulus"],
+            label=label2title["glomerulus"],
             edgecolor="black",
         )
         unsure_patch = mpatches.Patch(
-            facecolor=colors["unsure"], label=titles["unsure"], edgecolor="black"
+            facecolor=colors["unsure"], label=label2title["unsure"], edgecolor="black"
         )
         handles = [blood_vessel_patch, glomerulus_patch, unsure_patch]
-        # fig.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5))
         fig.legend(
             handles=handles, loc="upper center", bbox_to_anchor=(0.5, 0.05), ncol=3
         )

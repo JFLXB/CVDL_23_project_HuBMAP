@@ -10,7 +10,6 @@ class BCEDiceLoss(nn.Module):
         predictions = F.softmax(predictions)
         inputs = inputs.reshape(-1)
         targets = targets.reshape(-1)
-        
 
         intersection = (inputs * targets).sum()
         dice_loss = 1 - (2.0 * intersection + smooth) / (

@@ -14,6 +14,7 @@ from hubmap.training import LRScheduler
 # from hubmap.training import EarlyStopping
 
 from hubmap.models import DPT
+
 # from hubmap.models.fct import init_weights
 
 parser = argparse.ArgumentParser()
@@ -65,9 +66,7 @@ transformations = T.Compose(
 # )
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-checkpoint_name = (
-    f"dpt_overfit_single_image.pt"
-)
+checkpoint_name = f"dpt_overfit_single_image.pt"
 
 # model = FCT(in_channels=3, num_classes=NUM_CLASSES).to(device)
 # model.apply(init_weights)
@@ -89,6 +88,7 @@ benchmark = IoU()
 
 from hubmap.dataset import BaseDataset
 from hubmap.data import DATA_DIR
+
 dataset = BaseDataset(DATA_DIR, transform=transformations, with_background=True)
 image, target = dataset[0]
 image, target = image.unsqueeze(0).to(device), target.unsqueeze(0).to(device)

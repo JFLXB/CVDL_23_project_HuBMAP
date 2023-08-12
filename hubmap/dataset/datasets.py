@@ -9,8 +9,14 @@ import json
 import pandas as pd
 from abc import ABC, abstractmethod
 
-id2label = {1: "blood_vessel", 2: "glomerulus", 3: "unsure", 0: "background"}
-label2id = {"blood_vessel": 1, "glomerulus": 2, "unsure": 3, "background": 0}
+id2label = {0: "blood_vessel", 1: "glomerulus", 2: "unsure", 3: "background"}
+label2id = {"blood_vessel": 0, "glomerulus": 1, "unsure": 2, "background": 3}
+label2title = {
+    "blood_vessel": "Blood Vessel",
+    "glomerulus": "Glomerulus",
+    "unsure": "Unsure",
+    "background": "Background",
+}
 
 
 def generate_mask(img_data, with_background=False, as_indexed_mask=False):
@@ -38,7 +44,7 @@ def generate_mask(img_data, with_background=False, as_indexed_mask=False):
 
     if with_background:
         background_channel = label2id["background"]
-        mask[:, :, background_channel] = 255 - np.sum(mask[:, :, 1:], axis=2)
+        mask[:, :, background_channel] = 255 - np.sum(mask, axis=2)
 
     return mask
 

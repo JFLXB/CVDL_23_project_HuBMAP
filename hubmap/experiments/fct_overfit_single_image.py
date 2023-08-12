@@ -65,9 +65,7 @@ transformations = T.Compose(
 # )
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-checkpoint_name = (
-    f"fct_overfit_img_size_{args.image_size}.pt"
-)
+checkpoint_name = f"fct_overfit_img_size_{args.image_size}.pt"
 
 model = FCT(in_channels=3, num_classes=2).to(device)
 model.apply(init_weights)
@@ -88,6 +86,7 @@ lr_scheduler = LRScheduler(optimizer, patience=20, min_lr=1e-8, factor=0.5)
 
 from hubmap.dataset import BaseDataset
 from hubmap.data import DATA_DIR
+
 dataset = BaseDataset(DATA_DIR, transform=transformations, with_background=True)
 image, target = dataset[0]
 image, target = image.unsqueeze(0).to(device), target.unsqueeze(0).to(device)

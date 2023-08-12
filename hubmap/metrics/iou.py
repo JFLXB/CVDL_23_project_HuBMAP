@@ -2,8 +2,7 @@
 IoU Metric
 """
 import torch
-import torch.nn.functional as F
-import numpy as np
+from copy import deepcopy
 
 
 class IoU:
@@ -13,13 +12,17 @@ class IoU:
         self,
         class_index: int = None,
         reduction: str = "mean",
+        pred_idx: int = None,
+        activation_fun=None,
     ):
-        self._classes_to_evaluate = class_index
         if reduction not in ["mean", "sum", "none"]:
             raise ValueError(
-                f"Reduction {reduction} is not supported. Please choose one of ['mean', 'sum', 'none']"
+                f"Batch Reduction {reduction} is not supported. Please choose one of ['mean', 'sum', 'none']"
             )
+        self._classes_to_evaluate = class_index
         self._reduction = reduction
+        self._pred_idx = pred_idx
+        self._activation_fun = activation_fun
 
     def __call__(self, prediction: torch.Tensor, target: torch.Tensor):
         """_summary_
@@ -36,70 +39,94 @@ class IoU:
         _type_
             _description_
         """
-        # prediction = prediction[2]
-        probs = F.sigmoid(prediction.type(torch.float32))
-        classes = torch.argmax(probs, dim=1, keepdims=True)
-        classes_per_channel = torch.zeros_like(prediction)
-        classes_per_channel.scatter_(1, classes, 1)
+        prediction = (
+            prediction[self._pred_idx] if self._pred_idx is not None else prediction
+        )
         
-        if self._classes_to_evaluate:
-            prediction_bv = classes_per_channel[:, self._classes_to_evaluate, :, :]
-            target_bv = target[:, self._classes_to_evaluate, :, :]
-            intersection = torch.logical_and(prediction_bv, target_bv)
-            union = torch.logical_or(prediction_bv, target_bv)
-            if torch.sum(union).item() == 0:
-                iou_score = torch.tensor(0.0)
-            else:
-                iou_score = torch.sum(intersection, dim=(1, 2)) / torch.sum(union, dim=(1, 2))
+        if target.size() != prediction.size():
+            raise ValueError(
+                f"Target and prediction must have the same size, but got {target.size()} and {prediction.size()}."
+            )
+        if target.dim() != 4:
+            target = target.unsqueeze(0)
+        if prediction.dim() != 4:
+            prediction = prediction.unsqueeze(0)
+
+        if self._activation_fun:
+            prediction = self._activation_fun(prediction)
+
+        if self._classes_to_evaluate is None:
+            n_classes = target.size(1)
+            iou_score = torch.zeros((target.size(0), n_classes))
+            for i in range(n_classes):
+                iou_class_scores = self._calculate_iou_for_class(i, target, prediction)
+                iou_score[:, i] = iou_class_scores.view(-1)
+            iou_score = self._do_reduction(iou_score, dim=1)
         else:
-            scores = torch.zeros(classes_per_channel.size(1))
-            for i in range(classes_per_channel.size(1)):
-                prediction_bv = classes_per_channel[:, i, :, :]
-                target_bv = target[:, i, :, :]
-                intersection = torch.logical_and(prediction_bv, target_bv)
-                union = torch.logical_or(prediction_bv, target_bv)
-                if torch.sum(union).item() == 0:
-                    iou_score = torch.tensor(0.0)
-                else:
-                    iou_score = torch.sum(intersection, dim=(1, 2)) / torch.sum(union, dim=(1, 2))
-                scores[i] = iou_score.item()
-            iou_score = torch.mean(scores)
+            iou_score = self._calculate_iou_for_class(
+                self._classes_to_evaluate, target, prediction
+            )
 
-        # print(iou_score.size())
-        # print(iou_score)
+        return self._do_reduction(iou_score, dim=0)
 
-        # iou_score = torch.nan_to_num(iou_score, nan=0.0, posinf=0.0, neginf=0.0)
+    def _calculate_iou_for_class(self, cls_idx: int, T: torch.Tensor, P: torch.Tensor):
+        T_cls = deepcopy(T[:, cls_idx : cls_idx + 1, :, :])
+        P_cls = deepcopy(P[:, cls_idx : cls_idx + 1, :, :])
+        return self._calculate_iou_over_batches(T_cls, P_cls)
 
-        # intersection = torch.logical_and(prediction, target)
-        # union = torch.logical_or(prediction, target)
-        # iou_score = torch.sum(intersection) / torch.sum(union)
-        # # return self._do_reduction(iou_score)
-        # print(iou_score.item())
-        # return iou_score
+    def _calculate_iou_over_batches(self, T: torch.Tensor, P: torch.Tensor):
+        T, P = deepcopy(T), deepcopy(P)
+        is_special_case = T.sum(dim=(-2, -1)) == 0
+        T[is_special_case] = torch.logical_not(T[is_special_case]).type(torch.float32)
+        P[is_special_case] = torch.logical_not(P[is_special_case]).type(torch.float32)
+        intersection = torch.logical_and(T, P).sum(dim=(-2, -1))
+        uninon = torch.logical_or(T, P).sum(dim=(-2, -1))
+        iou = intersection / uninon
+        return iou
 
-        return self._do_reduction(iou_score)
-
-    def _do_reduction(self, iou_scores):
+    def _do_reduction(self, iou_scores, dim):
         if self._reduction == "mean":
-            return torch.mean(iou_scores)
+            return torch.mean(iou_scores, dim=dim)
         elif self._reduction == "sum":
-            return torch.sum(iou_scores)
+            return torch.sum(iou_scores, dim=dim)
         else:
             return iou_scores
 
 
 if __name__ == "__main__":
-    iou = IoU(0)
+    target = torch.tensor(
+        [
+            [[[0, 0], [0, 0]], [[1, 0], [1, 0]]],
+            [
+                [[0, 1], [0, 0]],
+                [[0, 0], [1, 1]],
+            ],
+            [
+                [[0, 0], [0, 0]],
+                [[0, 0], [0, 0]],
+            ],
+        ],
+        dtype=torch.float32,
+    )
 
-    GT = torch.tensor([[[[1, 1, 0], [1, 1, 0], [0, 0, 0]]]])
-    A = torch.tensor([[[[1, 1, 0], [1, 1, 0], [0, 0, 0]]]])
-    assert iou(GT, A).item() == 1.0
+    pred = torch.tensor(
+        [
+            [[[0, 0], [0, 0]], [[0, 0], [1, 0]]],
+            [
+                [[1, 1], [1, 0]],
+                [[0, 0], [1, 0]],
+            ],
+            [
+                [[0, 0], [0, 0]],
+                [[0, 0], [0, 0]],
+            ],
+        ],
+        dtype=torch.float32,
+    )
 
-    B = torch.tensor([[[[0, 1, 0], [0, 0, 0], [0, 0, 0]]]])
-    assert iou(GT, B).item() == 1 / 4
+    iou = IoU()
 
-    C = torch.tensor([[[[0, 1, 0], [0, 1, 0], [0, 0, 0]]]])
-    assert iou(GT, C).item() == 2 / 4
+    score = iou(target, pred)
 
-    D = torch.tensor([[[[0, 1, 0], [1, 1, 0], [0, 0, 0]]]])
-    assert iou(GT, D).item() == 3 / 4
+    goal = torch.tensor([[1.0000, 0.5000], [0.3333, 0.5000], [1.0000, 1.0000]])
+    assert torch.isclose(score, goal.mean(1).mean(0))
