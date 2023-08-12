@@ -75,7 +75,14 @@ def visualize_image(
     image = image.cpu()
 
     iou = IoU()
-    iou_score = iou(classes_per_channel, target)
+    iou_score = iou(classes_per_channel, target).item()
+    
+    iou_blood_vessel = IoU(class_index=label2id["blood_vessel"])
+    iou_blood_vessel_score = iou_blood_vessel(classes_per_channel, target).item()
+    iou_glomerulus = IoU(class_index=label2id["glomerulus"])
+    iou_glomerulus_score = iou_glomerulus(classes_per_channel, target).item()
+    iou_unsure = IoU(class_index=label2id["unsure"])
+    iou_unsure_score = iou_unsure(classes_per_channel, target).item()
 
     colors = {
         "blood_vessel": "tomato",
@@ -122,16 +129,18 @@ def visualize_image(
     if legend:
         blood_vessel_patch = mpatches.Patch(
             facecolor=colors["blood_vessel"],
-            label=label2title["blood_vessel"],
+            label=f"{label2title['blood_vessel']}\n(IoU: {iou_blood_vessel_score * 100:.2f})",
             edgecolor="black",
         )
         glomerulus_patch = mpatches.Patch(
             facecolor=colors["glomerulus"],
-            label=label2title["glomerulus"],
+            label=f"{label2title['glomerulus']}\n(IoU: {iou_glomerulus_score * 100:.2f})",
             edgecolor="black",
         )
         unsure_patch = mpatches.Patch(
-            facecolor=colors["unsure"], label=label2title["unsure"], edgecolor="black"
+            facecolor=colors["unsure"], 
+            label=f"{label2title['unsure']}\n(IoU: {iou_unsure_score * 100:.2f})",
+            edgecolor="black"
         )
         handles = [blood_vessel_patch, glomerulus_patch, unsure_patch]
         fig.legend(
@@ -139,7 +148,7 @@ def visualize_image(
         )
 
     if title:
-        fig.suptitle(f"{checkpoint_name} / IoU: {(iou_score.item() * 100):.2f}%")
+        fig.suptitle(f"{checkpoint_name} / IoU: {(iou_score * 100):.2f}")
     else:
         print("IoU: ", iou_score.item())
     fig.tight_layout()
