@@ -7,6 +7,7 @@ from hubmap.experiments.load_data import make_annotated_loader
 from hubmap.dataset import transforms as T
 from hubmap.losses import MultiOutputBCELoss
 from hubmap.losses import BCEDiceLoss
+from hubmap.losses import ClassWeightedBCELoss
 from hubmap.metrics import IoU
 from hubmap.training import train
 from hubmap.training import LRScheduler
@@ -56,7 +57,7 @@ transformations = T.Compose(
     [
         T.ToTensor(),
         T.Resize((IMG_DIM, IMG_DIM)),
-        T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        # T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ]
 )
 
@@ -67,7 +68,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 checkpoint_name = f"fct_overfit_img_size_{args.image_size}.pt"
 
-model = FCT(in_channels=3, num_classes=2).to(device)
+model = FCT(in_channels=3, num_classes=4).to(device)
 model.apply(init_weights)
 
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
@@ -76,10 +77,15 @@ optimizer = optim.Adam(model.parameters(), lr=1e-3)
 # )
 # criterion = BCEDiceLoss()
 criterion = nn.BCELoss()
+# blood_vessel_weight = 3 / 4
+# other_weight = (1 / 4) / 3
+# criterion = ClassWeightedBCELoss(
+#     weights=[blood_vessel_weight, other_weight, other_weight, other_weight]
+# )
 
 # WE ARE ONLY INTERESTED IN THE IoU OF THE BLOOD VESSEL CLASS FOR NOW.
 # benchmark = IoU(class_index=0)
-benchmark = IoU(1)
+benchmark = IoU()
 # train_loader, test_loader = load_annotated_data(BATCH_SIZE)
 lr_scheduler = LRScheduler(optimizer, patience=20, min_lr=1e-8, factor=0.5)
 # early_stopping = EarlyStopping(patience=50, min_delta=0.0)
@@ -88,10 +94,10 @@ from hubmap.dataset import BaseDataset
 from hubmap.data import DATA_DIR
 
 dataset = BaseDataset(DATA_DIR, transform=transformations, with_background=True)
-image, target = dataset[0]
+image, target = dataset[3]
 image, target = image.unsqueeze(0).to(device), target.unsqueeze(0).to(device)
-target = target[:, :2, :, :]
-print(target.size())
+# target = target[:, :1, :, :]
+# print(target.size())
 
 train_loader = [(image, target)]
 test_loader = [(image, target)]

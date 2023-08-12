@@ -39,10 +39,12 @@ class IoU:
         _type_
             _description_
         """
+        prediction = deepcopy(prediction.detach().cpu())
+        target = deepcopy(target.detach().cpu())
         prediction = (
             prediction[self._pred_idx] if self._pred_idx is not None else prediction
         )
-        
+
         if target.size() != prediction.size():
             raise ValueError(
                 f"Target and prediction must have the same size, but got {target.size()} and {prediction.size()}."
@@ -72,6 +74,8 @@ class IoU:
     def _calculate_iou_for_class(self, cls_idx: int, T: torch.Tensor, P: torch.Tensor):
         T_cls = deepcopy(T[:, cls_idx : cls_idx + 1, :, :])
         P_cls = deepcopy(P[:, cls_idx : cls_idx + 1, :, :])
+        T_cls = T[:, cls_idx : cls_idx + 1, :, :]
+        P_cls = P[:, cls_idx : cls_idx + 1, :, :]
         return self._calculate_iou_over_batches(T_cls, P_cls)
 
     def _calculate_iou_over_batches(self, T: torch.Tensor, P: torch.Tensor):

@@ -76,13 +76,20 @@ def visualize_image(
 
     iou = IoU()
     iou_score = iou(classes_per_channel, target).item()
-    
+
     iou_blood_vessel = IoU(class_index=label2id["blood_vessel"])
     iou_blood_vessel_score = iou_blood_vessel(classes_per_channel, target).item()
     iou_glomerulus = IoU(class_index=label2id["glomerulus"])
     iou_glomerulus_score = iou_glomerulus(classes_per_channel, target).item()
     iou_unsure = IoU(class_index=label2id["unsure"])
     iou_unsure_score = iou_unsure(classes_per_channel, target).item()
+    iou_background = IoU(class_index=label2id["background"])
+    iou_background_score = iou_background(classes_per_channel, target).item()
+
+    # iou_blood_vessel_score = 0
+    # iou_glomerulus_score = 0
+    # iou_unsure_score = 0
+    # iou_background_score = 0
 
     colors = {
         "blood_vessel": "tomato",
@@ -96,8 +103,8 @@ def visualize_image(
     image_np = image.permute(1, 2, 0).squeeze().numpy()
 
     if not overlay:
-        target_mask_rgb = mask_to_rgb(target, color_map=cmap, bg_channel=3)
-        pred_mask_rgb = mask_to_rgb(classes_per_channel, color_map=cmap, bg_channel=3)
+        target_mask_rgb = mask_to_rgb(target, color_map=cmap, bg_channel=-1)
+        pred_mask_rgb = mask_to_rgb(classes_per_channel, color_map=cmap, bg_channel=-1)
 
         fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(6, 2.5))
         axs[0].imshow(image_np)
@@ -107,24 +114,25 @@ def visualize_image(
         axs[2].imshow(pred_mask_rgb.permute(1, 2, 0))
         axs[2].set_title(f"Prediction")
     else:
-        image = PIL.Image.fromarray(np.uint8(image_np) * 255)
-        image = image.convert("LA") if grayscale else image.convert("RGBA")
-        image.putalpha(int(255 * saturation))
+        raise NotImplementedError
+        # image = PIL.Image.fromarray(np.uint8(image_np) * 255)
+        # image = image.convert("LA") if grayscale else image.convert("RGBA")
+        # image.putalpha(int(255 * saturation))
 
-        target_mask_rgb = mask_to_rgba(
-            target, color_map=cmap, bg_channel=3, alpha=alpha
-        )
-        pred_mask_rgb = mask_to_rgba(
-            classes_per_channel, color_map=cmap, bg_channel=3, alpha=alpha
-        )
+        # target_mask_rgb = mask_to_rgba(
+        #     target, color_map=cmap, bg_channel=3, alpha=1.0
+        # )
+        # pred_mask_rgb = mask_to_rgba(
+        #     classes_per_channel, color_map=cmap, bg_channel=3, alpha=alpha
+        # )
 
-        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(4, 2.5))
-        axs[0].imshow(image, cmap="gray") if grayscale else axs[0].imshow(image_np)
-        axs[0].imshow(target_mask_rgb.permute(1, 2, 0))
-        axs[0].set_title(f"Ground Truth")
-        axs[1].imshow(image, cmap="gray") if grayscale else axs[0].imshow(image_np)
-        axs[1].imshow(pred_mask_rgb.permute(1, 2, 0))
-        axs[1].set_title(f"Prediction")
+        # fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(4, 2.5))
+        # axs[0].imshow(image, cmap="gray") if grayscale else axs[0].imshow(image_np)
+        # axs[0].imshow(target_mask_rgb.permute(1, 2, 0))
+        # axs[0].set_title(f"Ground Truth")
+        # axs[1].imshow(image, cmap="gray") if grayscale else axs[0].imshow(image_np)
+        # axs[1].imshow(pred_mask_rgb.permute(1, 2, 0), alpha=0.5)
+        # axs[1].set_title(f"Prediction")
 
     if legend:
         blood_vessel_patch = mpatches.Patch(
@@ -138,13 +146,18 @@ def visualize_image(
             edgecolor="black",
         )
         unsure_patch = mpatches.Patch(
-            facecolor=colors["unsure"], 
+            facecolor=colors["unsure"],
             label=f"{label2title['unsure']}\n(IoU: {iou_unsure_score * 100:.2f})",
-            edgecolor="black"
+            edgecolor="black",
         )
-        handles = [blood_vessel_patch, glomerulus_patch, unsure_patch]
+        background_patch = mpatches.Patch(
+            facecolor=colors["background"],
+            label=f"{label2title['background']}\n(IoU: {iou_background_score * 100:.2f})",
+            edgecolor="black",
+        )
+        handles = [blood_vessel_patch, glomerulus_patch, unsure_patch, background_patch]
         fig.legend(
-            handles=handles, loc="upper center", bbox_to_anchor=(0.5, 0.05), ncol=3
+            handles=handles, loc="upper center", bbox_to_anchor=(0.5, 0.05), ncol=4
         )
 
     if title:
