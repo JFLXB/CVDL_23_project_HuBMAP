@@ -29,8 +29,8 @@ class Resize:
         self.size = size
 
     def __call__(self, image, target):
-        image = F.resize(image, self.size, antialias=True)
-        target = F.resize(target, self.size, antialias=True)
+        image = F.resize(image, self.size, interpolation=transforms.InterpolationMode.BILINEAR, antialias=True)
+        target = F.resize(target, self.size, interpolation=transforms.InterpolationMode.NEAREST, antialias=True)
         return image, target
 
 
@@ -131,5 +131,10 @@ class Normalize:
 
 
 class ToTensor:
+    def __init__(self, mask_as_integer=False):
+        self.mask_as_integer = mask_as_integer
     def __call__(self, image, mask):
-        return F.to_tensor(np.array(image)), F.to_tensor(np.array(mask))
+        if self.mask_as_integer:
+            return F.to_tensor(np.array(image)), torch.tensor(mask, dtype=torch.uint8).permute(2, 0, 1)
+        else:
+            return F.to_tensor(np.array(image)), F.to_tensor(np.array(mask))
