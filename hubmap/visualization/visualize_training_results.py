@@ -17,17 +17,17 @@ def visualize_checkpoint(checkpoint_name: str):
     # start_epoch = checkpoint.get("start_epoch", 1)
     training_loss_history = checkpoint["training_loss_history"]
     training_metric_history = checkpoint["training_metric_history"]
-    testing_loss_history = checkpoint["testing_loss_history"]
-    testing_metric_history = checkpoint["testing_metric_history"]
+    validation_loss_history = checkpoint["validation_loss_history"]
+    validation_metric_history = checkpoint["validation_metric_history"]
 
     loss_figure = _create_figure(
-        training_loss_history, testing_loss_history, "Loss", "Training and Testing Loss"
+        training_loss_history, validation_loss_history, "Loss", "Training and Validation Loss"
     )
     metric_figure = _create_figure(
         training_metric_history,
-        testing_metric_history,
+        validation_metric_history,
         "Benchmark",
-        "Training and Testing Benchmark Values",
+        "Training and Validation Benchmark Values",
     )
 
     return loss_figure, metric_figure
@@ -36,15 +36,15 @@ def visualize_checkpoint(checkpoint_name: str):
 def visualize_result(result: Dict):
     plt.style.use(["science"])
     data_train = result["training"]["loss"]
-    data_test = result["testing"]["loss"]
+    data_test = result["validation"]["loss"]
     loss_figure = _create_figure(
-        data_train, data_test, "Loss", "Training and Testing Loss"
+        data_train, data_test, "Loss", "Training and Validation Loss"
     )
 
     data_train = result["training"]["metric"]
-    data_test = result["testing"]["metric"]
+    data_test = result["validation"]["metric"]
     metric_figure = _create_figure(
-        data_train, data_test, "Benchmark", "Training and Testing Benchmark Values"
+        data_train, data_test, "Benchmark", "Training and Validation Benchmark Values"
     )
 
     return loss_figure, metric_figure
@@ -65,7 +65,7 @@ def _create_figure(data_train, data_test, y_label, title):
         label="Training",
     )
     sns.lineplot(
-        data_test, x="epoch", y="value", ax=axs, linestyle="dashed", label="Testing"
+        data_test, x="epoch", y="value", ax=axs, linestyle="dashed", label="validation"
     )
     axs.set_xlabel("Epochs")
     axs.set_ylabel(y_label)

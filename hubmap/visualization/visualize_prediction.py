@@ -51,8 +51,9 @@ def visualize_image(
             f"Image and target must have 3 dimensions, but got {len(image.size())} and {len(target.size())}."
         )
 
-    device = "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     model.load_state_dict(checkpoint["model_state_dict"])
+    model = model.to(device)
     model = model.to(device)
     image = image.to(device)
 
@@ -73,6 +74,7 @@ def visualize_image(
         classes_per_channel = classes_per_channel.squeeze(0)
 
     image = image.cpu()
+    classes_per_channel = classes_per_channel.cpu()
 
     iou = IoU()
     iou_score = iou(classes_per_channel, target).item()
