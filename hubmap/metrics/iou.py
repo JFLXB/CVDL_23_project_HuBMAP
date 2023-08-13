@@ -39,8 +39,8 @@ class IoU:
         _type_
             _description_
         """
-        prediction = deepcopy(prediction.detach().cpu())
-        target = deepcopy(target.detach().cpu())
+        prediction = prediction.clone().detach().cpu()
+        target = target.clone().detach().cpu()
         prediction = (
             prediction[self._pred_idx] if self._pred_idx is not None else prediction
         )
@@ -72,14 +72,14 @@ class IoU:
         return self._do_reduction(iou_score, dim=0)
 
     def _calculate_iou_for_class(self, cls_idx: int, T: torch.Tensor, P: torch.Tensor):
-        T_cls = deepcopy(T[:, cls_idx : cls_idx + 1, :, :])
-        P_cls = deepcopy(P[:, cls_idx : cls_idx + 1, :, :])
+        T_cls = T[:, cls_idx : cls_idx + 1, :, :].clone()
+        P_cls = P[:, cls_idx : cls_idx + 1, :, :].clone()
         T_cls = T[:, cls_idx : cls_idx + 1, :, :]
         P_cls = P[:, cls_idx : cls_idx + 1, :, :]
         return self._calculate_iou_over_batches(T_cls, P_cls)
 
     def _calculate_iou_over_batches(self, T: torch.Tensor, P: torch.Tensor):
-        T, P = deepcopy(T), deepcopy(P)
+        T, P = T.clone(), P.clone()
         is_special_case = T.sum(dim=(-2, -1)) == 0
         T[is_special_case] = torch.logical_not(T[is_special_case]).type(torch.float32)
         P[is_special_case] = torch.logical_not(P[is_special_case]).type(torch.float32)
@@ -134,3 +134,9 @@ if __name__ == "__main__":
 
     goal = torch.tensor([[1.0000, 0.5000], [0.3333, 0.5000], [1.0000, 1.0000]])
     assert torch.isclose(score, goal.mean(1).mean(0))
+    
+    from sklearn.metrics import jaccard_score
+    
+    jac = jaccard_score(target.view(-1), pred.view(-1), average="weighted")
+    print(jac)
+    print(score)
