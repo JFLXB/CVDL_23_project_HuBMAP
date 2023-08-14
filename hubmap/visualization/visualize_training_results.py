@@ -16,18 +16,21 @@ def visualize_checkpoint(checkpoint_name: str):
     # epoch = checkpoint["epoch"] + 1
     # start_epoch = checkpoint.get("start_epoch", 1)
     training_loss_history = checkpoint["training_loss_history"]
-    training_metric_history = checkpoint["training_metric_history"]
+    training_metric_history = checkpoint["training__history"]
     validation_loss_history = checkpoint["validation_loss_history"]
-    validation_metric_history = checkpoint["validation_metric_history"]
+    validation_metric_history = checkpoint["validation_acc_history"]
 
     loss_figure = _create_figure(
-        training_loss_history, validation_loss_history, "Loss", "Training and Validation Loss"
+        training_loss_history,
+        validation_loss_history,
+        "Loss",
+        "Training and Validation Loss",
     )
     metric_figure = _create_figure(
         training_metric_history,
         validation_metric_history,
         "Benchmark",
-        "Training and Validation Benchmark Values",
+        "Training and Validation Accuracy Values",
     )
 
     return loss_figure, metric_figure
@@ -41,10 +44,10 @@ def visualize_result(result: Dict):
         data_train, data_test, "Loss", "Training and Validation Loss"
     )
 
-    data_train = result["training"]["metric"]
-    data_test = result["validation"]["metric"]
+    data_train = result["training"]["acc"]
+    data_test = result["validation"]["acc"]
     metric_figure = _create_figure(
-        data_train, data_test, "Benchmark", "Training and Validation Benchmark Values"
+        data_train, data_test, "Benchmark", "Training and Validation Accuracy Values"
     )
 
     return loss_figure, metric_figure
@@ -65,7 +68,7 @@ def _create_figure(data_train, data_test, y_label, title):
         label="Training",
     )
     sns.lineplot(
-        data_test, x="epoch", y="value", ax=axs, linestyle="dashed", label="validation"
+        data_test, x="epoch", y="value", ax=axs, linestyle="dashed", label="Validation"
     )
     axs.set_xlabel("Epochs")
     axs.set_ylabel(y_label)

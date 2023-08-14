@@ -8,8 +8,13 @@ from copy import deepcopy
 class IoU:
     """ """
 
+    @property
+    def name(self):
+        return self._name
+
     def __init__(
         self,
+        name: str = "IoU",
         class_index: int = None,
         reduction: str = "mean",
         pred_idx: int = None,
@@ -23,6 +28,7 @@ class IoU:
         self._reduction = reduction
         self._pred_idx = pred_idx
         self._activation_fun = activation_fun
+        self._name = name
 
     def __call__(self, prediction: torch.Tensor, target: torch.Tensor):
         """_summary_
@@ -134,9 +140,9 @@ if __name__ == "__main__":
 
     goal = torch.tensor([[1.0000, 0.5000], [0.3333, 0.5000], [1.0000, 1.0000]])
     assert torch.isclose(score, goal.mean(1).mean(0))
-    
+
     from sklearn.metrics import jaccard_score
-    
+
     jac = jaccard_score(target.view(-1), pred.view(-1), average="weighted")
     print(jac)
     print(score)

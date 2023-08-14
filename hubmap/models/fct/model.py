@@ -13,8 +13,8 @@ class FCT(nn.Module):
 
         # attention heads and filters per block
         # att_heads = [2, 2, 2, 2, 2, 2, 2, 2, 2]  # Not used in the paper
-        att_heads = [2, 4, 8, 12, 16, 12, 8, 4, 2] # Given in the paper
-        filters = [8, 16, 32, 64, 128, 64, 32, 16, 8]
+        att_heads = [2, 4, 8, 16, 32, 16, 8, 4, 2]  # Given in the paper
+        filters = [16, 32, 64, 128, 384, 128, 64, 32, 16]
 
         # number of blocks used in the model
         blocks = len(filters)
@@ -98,7 +98,7 @@ class FCT(nn.Module):
         print(f"DS 8 out -> {list(out8.size())}") if self._verbose else None
         out9 = self.ds9(skip9)
         print(f"DS 9 out -> {list(out9.size())}") if self._verbose else None
-        
+
         # out7 = F.softmax(out7, dim=1)
         # out8 = F.softmax(out8, dim=1)
         # out9 = F.softmax(out9, dim=1)

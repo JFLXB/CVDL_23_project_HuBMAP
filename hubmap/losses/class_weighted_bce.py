@@ -16,9 +16,7 @@ class ClassWeightedBCELoss(nn.Module):
         elif isinstance(weights, np.ndarray):
             self._class_weights = torch.tensor(weights)
         else:
-            raise ValueError(
-                "weights must be a list, torch.Tensor, or np.ndarray"
-            )
+            raise ValueError("weights must be a list, torch.Tensor, or np.ndarray")
 
     def forward(self, predictions, targets):
         n_classes = predictions.size(1)

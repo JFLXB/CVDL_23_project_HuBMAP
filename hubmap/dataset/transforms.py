@@ -29,8 +29,18 @@ class Resize:
         self.size = size
 
     def __call__(self, image, target):
-        image = F.resize(image, self.size, interpolation=transforms.InterpolationMode.BILINEAR, antialias=True)
-        target = F.resize(target, self.size, interpolation=transforms.InterpolationMode.NEAREST, antialias=True)
+        image = F.resize(
+            image,
+            self.size,
+            interpolation=transforms.InterpolationMode.BILINEAR,
+            antialias=True,
+        )
+        target = F.resize(
+            target,
+            self.size,
+            interpolation=transforms.InterpolationMode.NEAREST,
+            antialias=True,
+        )
         return image, target
 
 
@@ -74,9 +84,23 @@ class RandomRotate90:
 
     def __call__(self, image, mask):
         if random.random() < self.p:
-            turns = random.choice([0, 1, 2, 3])
+            turns = random.choice([0, 1, 2, 3, 4])
             image = image.rotate(90 * turns)
             mask = mask.rotate(90 * turns)
+        return image, mask
+
+
+class RandomRotation:
+    # TODO: this is not working properly
+    def __init__(self, degrees: int, p=0.5):
+        self.p = p
+        self.degree = degrees
+
+    def __call__(self, image, mask):
+        if random.random() < self.p:
+            turns = random.choice([0, 1, 2, 3, 4])
+            image = image.rotate(self.degrees * turns)
+            mask = mask.rotate(self.degrees * turns)
         return image, mask
 
 
@@ -133,8 +157,20 @@ class Normalize:
 class ToTensor:
     def __init__(self, mask_as_integer=False):
         self.mask_as_integer = mask_as_integer
+
     def __call__(self, image, mask):
         if self.mask_as_integer:
-            return F.to_tensor(np.array(image)), torch.tensor(mask, dtype=torch.uint8).permute(2, 0, 1)
+            return F.to_tensor(np.array(image)), torch.tensor(
+                mask, dtype=torch.uint8
+            ).permute(2, 0, 1)
         else:
             return F.to_tensor(np.array(image)), F.to_tensor(np.array(mask))
+
+
+class Grayscale:
+    def __init__(self):
+        pass
+
+    def __call__(self, image, mask):
+        image_gray = transforms.Grayscale()(image)
+        return image_gray, mask

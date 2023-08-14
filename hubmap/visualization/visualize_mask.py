@@ -37,8 +37,10 @@ def mask_to_rgba(
 
     for channel in range(mask.size(channel_dim)):
         if bg_channel == channel:
-            continue
+            alpha_t = 0.0
+        else:
+            alpha_t = alpha
 
-        c = colors.to_rgba(color_map[channel], alpha=alpha)
+        c = colors.to_rgba(color_map[channel], alpha=alpha_t)
         rgb_mask = rgb_mask + mask[channel, :, :] * torch.tensor(c).view(4, 1, 1)
     return rgb_mask

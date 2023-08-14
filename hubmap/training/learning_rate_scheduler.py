@@ -36,8 +36,8 @@ class LRScheduler:
             self._optimizer,
             mode="min",
             patience=self._patience,
-            factor=self._factor,
-            min_lr=self._min_lr,
+            # factor=self._factor,
+            # min_lr=self._min_lr,
             verbose=True,
         )
 

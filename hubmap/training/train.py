@@ -69,8 +69,8 @@ def train(
         _description_
     """
     # if isinstance(criterion, nn.Module):
-        # criterion = [criterion]
-    
+    # criterion = [criterion]
+
     start_epoch = 1
 
     training_loss_history = []
@@ -112,7 +112,7 @@ def train(
             # print(predictions[2].size())
             # print(predictions[2].sigmoid().size())
             # assert False
-            
+
             preds_for_loss = (
                 predictions[loss_out_index]
                 if loss_out_index is not None
@@ -127,16 +127,26 @@ def train(
             # classes = torch.argmax(preds_for_benchmark, dim=1, keepdim=True)
             # classes_per_channel = torch.zeros_like(preds_for_benchmark)
             # classes_per_channel = classes_per_channel.scatter_(1, classes, 1)
-            
+
             # target_classes = torch.argmax(targets, dim=1)
             # print(targets.size(), preds_for_loss[0].size()[2:])
-            
-            t1 = F.interpolate(
-                targets, size=preds_for_loss[0].size()[2:], mode="nearest"
-            ).squeeze(1).type(torch.LongTensor).to(device)
-            t2 = F.interpolate(
-                targets, size=preds_for_loss[1].size()[2:], mode="nearest"
-            ).squeeze(1).type(torch.LongTensor).to(device)
+
+            t1 = (
+                F.interpolate(
+                    targets, size=preds_for_loss[0].size()[2:], mode="nearest"
+                )
+                .squeeze(1)
+                .type(torch.LongTensor)
+                .to(device)
+            )
+            t2 = (
+                F.interpolate(
+                    targets, size=preds_for_loss[1].size()[2:], mode="nearest"
+                )
+                .squeeze(1)
+                .type(torch.LongTensor)
+                .to(device)
+            )
             t_final = targets.squeeze(1).type(torch.LongTensor).to(device)
 
             # preds_for_loss = F.softmax(preds_for_loss, dim=1)
@@ -152,7 +162,7 @@ def train(
 
             # metric = benchmark(classes_per_channel, targets)
             metric = torch.tensor(-1.0)
-            
+
             loss = loss1 + loss2 + loss_final
             training_losses.append(loss.item())
             training_accuracies.append(metric.item())
@@ -187,18 +197,28 @@ def train(
                 #     else predictions
                 # )
                 # preds_for_benchmark = F.softmax(preds_for_benchmark, dim=1)
-                # classes = torch.argmax(preds_for_benchmark, dim=1, keepdim=True)             
+                # classes = torch.argmax(preds_for_benchmark, dim=1, keepdim=True)
                 # classes_per_channel = torch.zeros_like(preds_for_benchmark)
                 # classes_per_channel = classes_per_channel.scatter_(1, classes, 1)
 
                 # preds_for_loss = F.softmax(preds_for_loss, dim=1)
-                
-                t1 = F.interpolate(
-                    targets, size=preds_for_loss[0].size()[2:], mode="nearest"
-                ).squeeze(1).type(torch.LongTensor).to(device)
-                t2 = F.interpolate(
-                    targets, size=preds_for_loss[1].size()[2:], mode="nearest"
-                ).squeeze(1).type(torch.LongTensor).to(device)
+
+                t1 = (
+                    F.interpolate(
+                        targets, size=preds_for_loss[0].size()[2:], mode="nearest"
+                    )
+                    .squeeze(1)
+                    .type(torch.LongTensor)
+                    .to(device)
+                )
+                t2 = (
+                    F.interpolate(
+                        targets, size=preds_for_loss[1].size()[2:], mode="nearest"
+                    )
+                    .squeeze(1)
+                    .type(torch.LongTensor)
+                    .to(device)
+                )
                 t_final = targets.squeeze(1).type(torch.LongTensor).to(device)
 
                 # preds_for_loss = F.softmax(preds_for_loss, dim=1)
