@@ -123,74 +123,136 @@ class Acc:
         total = mask.sum()
         accuracy = correct / total
         return accuracy
-
-
-val_transforms = T.Compose(
-    [
-        T.ToTensor(),
-        T.Resize((256, 256)),
-    ]
-)
-val_set = ValDataset(DATA_DIR, transform=val_transforms, with_background=True)
-val_loader = DataLoader(val_set, batch_size=1, shuffle=False, num_workers=16)
-
-models = []
-for file in Path(CONFIG_DIR, "TransResUNet").glob('*'):
-    model_name = file.stem
-    print(f"Loading model: {model_name}")
     
-    data = torch.load(file)
-    checkpoint_path = Path(CHECKPOINT_DIR, data["checkpoint_name"])
     
-    model_checkpoint = torch.load(checkpoint_path)
-    backbone = data["backbone"]
-    pretrained = data["pretrained"]
+class Confidence:
+    @property
+    def name(self):
+        return self._name
     
-    model = TResUnet(num_classes=4, backbone=backbone, pretrained=pretrained)
-    model.load_state_dict(model_checkpoint["model_state_dict"])
-    models.append((model_name, model))
+    def __init__(self, name="Confidence"):
+        self._name = name
+        
+    def __call__(self, probs):
+        # Get the maximum probability over all classes
+        max_probs, _ = probs.max(dim=1)
+        # Select the blood vessel probabilities
+        blood_vessel_probs = max_probs[:, BLOOD_VESSEL_CLASS_INDEX]
+        # Calculate the mean probability over all pixels
+        mean_prob = blood_vessel_probs.mean()
+        return mean_prob
 
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
-# metrics = [Acc(name="Accuracy"), Jac("Jaccard", class_index=0)]
-metrics = [Precision(), Recall(), F2(), DiceScore(), Jac(), Acc()]
-
-results = torch.zeros(len(models), len(val_set), len(metrics))
-
-for i, (name, model) in enumerate(models):
-    print(f"Evaluating model: {name}")
-    model = model.to(device)
+def calculate_statistics(model, device, val_set, val_loader, metrics):
+    best_model_results = torch.zeros(len(val_set), len(metrics))
     model.eval()
-    
-    torch.set_grad_enabled(False)
-    
-    for j, (image, mask) in enumerate(val_loader):
-        image = image.to(device)
-        mask = mask.to(device)
+    with torch.no_grad():
+        for i, (image, mask) in enumerate(val_loader):
+            image = image.to(device)
+            mask = mask.to(device)
+            
+            prediction = model(image)
         
-        prediction = model(image)
-    
-        probs = F.sigmoid(prediction)
-        classes = torch.argmax(probs, dim=1, keepdims=True)
-        classes_per_channel = torch.zeros_like(prediction)
-        classes_per_channel.scatter_(1, classes, 1)
-        
-        for l, metric in enumerate(metrics):
-            results[i, j, l] = metric(classes_per_channel, mask)
+            probs = F.sigmoid(prediction)
+            classes = torch.argmax(probs, dim=1, keepdims=True)
+            classes_per_channel = torch.zeros_like(prediction)
+            classes_per_channel.scatter_(1, classes, 1)
+            
+            for j, metric in enumerate(metrics):
+                if isinstance(metric, Confidence):
+                    best_model_results[i, j] = metric(probs)
+                else:
+                    best_model_results[i, j] = metric(classes_per_channel, mask)
+    return best_model_results
 
 
-mean_results = results.mean(dim=1).numpy()
-var_results = results.var(dim=1).numpy()
-std_results = results.std(dim=1).numpy()
+def print_statistics(results, metrics, title):
+    mean_results = results.mean(dim=1).numpy()
+    var_results = results.var(dim=1).numpy()
+    std_results = results.std(dim=1).numpy()
 
-metric_names = [metric.name for metric in metrics]
-print("-----------------------------------")
-for i, (name, _) in enumerate(models):
-    print(name)
-    for j, metric_name in enumerate(metric_names):
-        print(f"\t{metric_name}: {mean_results[i, j]*100:.2f}% | ± {std_results[i, j]*100:.2f} (std) | ± {var_results[i, j]*100:.2f} (var)")
+    metric_names = [metric.name for metric in metrics]
     print("-----------------------------------")
+    print(title)
+    for i, metric_name in enumerate(metric_names):
+        print(f"\t{metric_name}: {mean_results[i]:.4f}% | "
+            f"± {std_results[i]:.4f} (std) | "
+            f"± {var_results[i]:.4f} (var)"
+            )
+    print("-----------------------------------")
+
+
+
+# val_transforms = T.Compose(
+#     [
+#         T.ToTensor(),
+#         T.Resize((256, 256)),
+#     ]
+# )
+# val_set = ValDataset(DATA_DIR, transform=val_transforms, with_background=True)
+# val_loader = DataLoader(val_set, batch_size=1, shuffle=False, num_workers=16)
+
+# models = []
+# for file in Path(CONFIG_DIR, "TransResUNet").glob('*'):
+#     model_name = file.stem
+#     print(f"Loading model: {model_name}")
+    
+#     data = torch.load(file)
+#     checkpoint_path = Path(CHECKPOINT_DIR, data["checkpoint_name"])
+    
+#     model_checkpoint = torch.load(checkpoint_path)
+#     backbone = data["backbone"]
+#     pretrained = data["pretrained"]
+    
+#     model = TResUnet(num_classes=4, backbone=backbone, pretrained=pretrained)
+#     model.load_state_dict(model_checkpoint["model_state_dict"])
+#     models.append((model_name, model))
+
+
+# device = "cuda" if torch.cuda.is_available() else "cpu"
+
+# # metrics = [Acc(name="Accuracy"), Jac("Jaccard", class_index=0)]
+# metrics = [Precision(), Recall(), F2(), DiceScore(), Jac(), Acc(), Confidence()]
+
+# results = torch.zeros(len(models), len(val_set), len(metrics))
+
+# for i, (name, model) in enumerate(models):
+#     print(f"Evaluating model: {name}")
+#     model = model.to(device)
+#     model.eval()
+    
+#     torch.set_grad_enabled(False)
+    
+#     for j, (image, mask) in enumerate(val_loader):
+#         image = image.to(device)
+#         mask = mask.to(device)
+        
+#         prediction = model(image)
+    
+#         probs = F.sigmoid(prediction)
+#         # probs = F.softmax(prediction, dim=1)
+#         classes = torch.argmax(probs, dim=1, keepdims=True)
+#         classes_per_channel = torch.zeros_like(prediction)
+#         classes_per_channel.scatter_(1, classes, 1)
+        
+#         for l, metric in enumerate(metrics):
+#             if isinstance(metric, Confidence):
+#                 results[i, j, l] = metric(probs)
+#             else:
+#                 results[i, j, l] = metric(classes_per_channel, mask)
+
+
+# mean_results = results.mean(dim=1).numpy()
+# var_results = results.var(dim=1).numpy()
+# std_results = results.std(dim=1).numpy()
+
+# metric_names = [metric.name for metric in metrics]
+# print("-----------------------------------")
+# for i, (name, _) in enumerate(models):
+#     print(name)
+#     for j, metric_name in enumerate(metric_names):
+#         print(f"\t{metric_name}: {mean_results[i, j]*100:.2f}% | ± {std_results[i, j]*100:.2f} (std) | ± {var_results[i, j]*100:.2f} (var)")
+#     print("-----------------------------------")
 
 
 """

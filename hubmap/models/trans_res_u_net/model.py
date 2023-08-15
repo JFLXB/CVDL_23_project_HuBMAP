@@ -43,7 +43,8 @@ class ResidualBlock(nn.Module):
             nn.BatchNorm2d(out_c),
         )
         self.shortcut = nn.Sequential(
-            nn.Conv2d(in_c, out_c, kernel_size=1, padding=0), nn.BatchNorm2d(out_c)
+            nn.Conv2d(in_c, out_c, kernel_size=1, padding=0), 
+            nn.BatchNorm2d(out_c)
         )
 
     def forward(self, inputs):
@@ -213,7 +214,6 @@ class TResUnet(nn.Module):
         b1 = self.b1(s4)
         b2 = self.b2(s4)
         b3 = torch.cat([b1, b2], axis=1)
-        # print(b3.shape)
 
         d1 = self.d1(b3, s3)
         d2 = self.d2(d1, s2)
@@ -221,6 +221,61 @@ class TResUnet(nn.Module):
         d4 = self.d4(d3, s0)
 
         y = self.output(d4)
+
+        if heatmap != None:
+            hmap = save_feats_mean(d4)
+            return hmap, y
+        else:
+            return y
+
+
+class TResUnet512(nn.Module):
+    def __init__(
+        self, num_classes: int, backbone: str = "resnet50", pretrained: bool = True
+    ):
+        super().__init__()
+
+        """ ResNet X """
+        backbone = backbone_map[backbone](pretrained=pretrained)
+
+        self.layer0 = nn.Sequential(backbone.conv1, backbone.bn1, backbone.relu)
+        self.layer1 = nn.Sequential(backbone.maxpool, backbone.layer1)
+        self.layer2 = backbone.layer2
+        self.layer3 = backbone.layer3
+        self.layer4 = backbone.layer4
+
+        """ Bridge blocks """
+        self.b1 = Bottleneck(2048, 512, 256, num_layers=2)
+        self.b2 = DilatedConv(2048, 512)
+
+        """ Decoder """
+        self.d1 = DecoderBlock([1024, 1024], 512)
+        self.d2 = DecoderBlock([512, 512], 256)
+        self.d3 = DecoderBlock([256, 256], 128)
+        self.d4 = DecoderBlock([128, 64], 64)
+        self.d5 = DecoderBlock([64, 3], 32)
+
+        self.output = nn.Conv2d(32, num_classes, kernel_size=1)
+
+    def forward(self, x, heatmap=None):
+        s0 = x
+        s1 = self.layer0(s0)  ## [-1, 64, h/2, w/2]
+        s2 = self.layer1(s1)  ## [-1, 256, h/4, w/4]
+        s3 = self.layer2(s2)  ## [-1, 512, h/8, w/8]
+        s4 = self.layer3(s3)  ## [-1, 1024, h/16, w/16]
+        s5 = self.layer4(s4)  ## [-1, 2048, h/32, w/32]
+
+        b1 = self.b1(s5)
+        b2 = self.b2(s5)
+        b3 = torch.cat([b1, b2], axis=1)
+
+        d1 = self.d1(b3, s4)
+        d2 = self.d2(d1, s3)
+        d3 = self.d3(d2, s2)
+        d4 = self.d4(d3, s1)
+        d5 = self.d5(d4, s0)
+
+        y = self.output(d5)
 
         if heatmap != None:
             hmap = save_feats_mean(d4)

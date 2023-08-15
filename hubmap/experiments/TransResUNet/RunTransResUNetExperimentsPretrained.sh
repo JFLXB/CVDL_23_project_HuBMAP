@@ -1,11 +1,17 @@
 #!/bin/bash
 
-mkdir -p ./logs/pretrained
+mkdir -p ./logs/final/pretrained
 
 echo "PRETRAINED"
-for file in hubmap/experiments/TransResUNet/pretrained/*; do
-    log_file=${file##*/}
-    log_file="${log_file%.*}"
-    log_file=./logs/pretrained/"${log_file}".log
-    python $file | tee $log_file
-done
+python ./hubmap/experiments/TransResUNet/train.py\
+    --name resnet50_pretrained \
+    --epochs 20 \
+    --backbone resnet50 \
+    --pretrained True \
+    --model TransResUNet \
+    --use-lr-scheduler False \
+    --lrs-patience None \
+    --use-early-stopping False \
+    --es-patience None \
+    --loss DiceBCELoss \
+    --weights None \
