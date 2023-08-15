@@ -45,7 +45,7 @@ config = {
     "lr": LR,
     "backbone": BACKBONE,
     "pretrained": PRETRAINED,
-    "figures_directory": FIGURES_CHECKPOINT_PATH
+    "figures_directory": FIGURES_CHECKPOINT_PATH,
 }
 os.makedirs(Path(CONFIG_DIR / CHECKPOINT_NAME).parent.resolve(), exist_ok=True)
 torch.save(config, Path(CONFIG_DIR / CHECKPOINT_NAME))

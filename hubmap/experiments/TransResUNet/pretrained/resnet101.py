@@ -25,10 +25,10 @@ from hubmap.models.trans_res_u_net.model import TResUnet
 
 NUM_EPOCHS = 200
 BATCH_SIZE = 16
-CHECKPOINT = "pretrained_resnet101_trial_0"
+CHECKPOINT = "pretrained_resnet101_trial_1"
 CONTINUE_TRAINING = False
 PATIENCE = 20
-LR = 1e-3
+LR = 1e-4
 BACKBONE = "resnet101"
 PRETRAINED = True
 

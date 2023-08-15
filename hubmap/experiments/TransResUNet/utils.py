@@ -74,6 +74,7 @@ def train(model, loader, optimizer, criterion, device):
         loss.backward()
         optimizer.step()
 
+        # probs = F.sigmoid(predictions)
         # probs = F.softmax(predictions, dim=1)
         probs = predictions
         classes = torch.argmax(probs, dim=1, keepdims=True)
@@ -152,9 +153,9 @@ def run(
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         start_epoch = checkpoint["epoch"] + 1
         training_loss_history = checkpoint["training_loss_history"]
-        training_metric_history = checkpoint["training_acc_history"]
+        training_acc_history = checkpoint["training_acc_history"]
         validation_loss_history = checkpoint["validation_loss_history"]
-        validation_metric_history = checkpoint["validation_acc_history"]
+        validation_acc_history = checkpoint["validation_acc_history"]
 
     for epoch in range(start_epoch, num_epochs + 1):
         train_losses, train_accs = train(
@@ -191,12 +192,14 @@ def run(
             lr_scheduler(np.mean(val_losses))
         # NOW DO THE ADJUSTMENTS USING THE EARLY STOPPING.
         if early_stopping:
-            early_stopping(np.mean(validation_losses))
+            early_stopping(np.mean(val_losses))
             # MODIFY THE DATA TO SAVE ACCORDING TO THE EARLY STOPPING RESULT.
             data_to_save["early_stopping"] = early_stopping.early_stop
 
         # SAVE THE DATA.
-        os.makedirs(Path(CHECKPOINT_DIR / checkpoint_name).parent.resolve(), exist_ok=True)
+        os.makedirs(
+            Path(CHECKPOINT_DIR / checkpoint_name).parent.resolve(), exist_ok=True
+        )
         torch.save(data_to_save, Path(CHECKPOINT_DIR / checkpoint_name))
 
         # DO THE EARLY STOPPING IF NECESSARY.

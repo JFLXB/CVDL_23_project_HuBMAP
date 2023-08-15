@@ -80,8 +80,6 @@ class IoU:
     def _calculate_iou_for_class(self, cls_idx: int, T: torch.Tensor, P: torch.Tensor):
         T_cls = T[:, cls_idx : cls_idx + 1, :, :].clone()
         P_cls = P[:, cls_idx : cls_idx + 1, :, :].clone()
-        T_cls = T[:, cls_idx : cls_idx + 1, :, :]
-        P_cls = P[:, cls_idx : cls_idx + 1, :, :]
         return self._calculate_iou_over_batches(T_cls, P_cls)
 
     def _calculate_iou_over_batches(self, T: torch.Tensor, P: torch.Tensor):

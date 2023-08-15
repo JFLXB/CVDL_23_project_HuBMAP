@@ -25,10 +25,10 @@ from hubmap.models.trans_res_u_net.model import TResUnet
 
 NUM_EPOCHS = 200
 BATCH_SIZE = 16
-CHECKPOINT = "pretrained_resnet152_trial_0"
+CHECKPOINT = "pretrained_resnet152_trial_1"
 CONTINUE_TRAINING = False
 PATIENCE = 20
-LR = 1e-3
+LR = 1e-4
 BACKBONE = "resnet152"
 PRETRAINED = True
 
@@ -45,7 +45,7 @@ config = {
     "lr": LR,
     "backbone": BACKBONE,
     "pretrained": PRETRAINED,
-    "figures_directory": FIGURES_CHECKPOINT_PATH
+    "figures_directory": FIGURES_CHECKPOINT_PATH,
 }
 os.makedirs(Path(CONFIG_DIR / CHECKPOINT_NAME).parent.resolve(), exist_ok=True)
 torch.save(config, Path(CONFIG_DIR / CHECKPOINT_NAME))
@@ -73,7 +73,9 @@ val_set = ValDataset(DATA_DIR, transform=val_transforms, with_background=True)
 train_loader = DataLoader(
     train_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=16
 )
-val_loader = DataLoader(val_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=16)
+val_loader = DataLoader(
+    val_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=16
+)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 

@@ -183,7 +183,7 @@ class TResUnet(nn.Module):
         backbone = backbone_map[backbone](pretrained=pretrained)
         # Added the following to dynamically adjust the number of input channels
         # ic = bottleneck_in.get(backbone, 1024)
-            
+
         self.layer0 = nn.Sequential(backbone.conv1, backbone.bn1, backbone.relu)
         self.layer1 = nn.Sequential(backbone.maxpool, backbone.layer1)
         self.layer2 = backbone.layer2

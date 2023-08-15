@@ -174,3 +174,12 @@ class Grayscale:
     def __call__(self, image, mask):
         image_gray = transforms.Grayscale()(image)
         return image_gray, mask
+
+
+class CustomOnImage:
+    def __init__(self, inner):
+        self._inner = inner
+        
+    def __call__(self, image, mask):
+        out = self._inner(image)
+        return out, mask
