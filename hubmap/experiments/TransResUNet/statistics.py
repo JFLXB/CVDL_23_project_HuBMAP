@@ -1,7 +1,5 @@
-from typing import Any
 import torch
 import torch.nn.functional as F
-import pandas as pd
 from pathlib import Path
 from torch.utils.data import DataLoader
 from checkpoints import CHECKPOINT_DIR
@@ -9,7 +7,6 @@ from configs import CONFIG_DIR
 from hubmap.data import DATA_DIR
 from hubmap.dataset import transforms as T
 from hubmap.dataset import ValDataset
-# from hubmap.metrics import IoU
 from hubmap.models.trans_res_u_net.model import TResUnet, TResUnet512
 
 BLOOD_VESSEL_CLASS_INDEX = 0
@@ -62,6 +59,21 @@ class F2:
         p = Precision()(prediction, target)
         r = Recall()(prediction, target)
         return (1+self._beta**2.) *(p*r) / float(self._beta**2*p + r + 1e-15)
+
+class F1:
+    @property
+    def name(self):
+        return self._name
+    
+    def __init__(self, name="F1", beta=2):
+        self._name = name
+        self._beta = beta
+    
+    def __call__(self, prediction, target):
+        p = Precision()(prediction, target)
+        r = Recall()(prediction, target)
+        return 2 * ((p * r) / float((p + r)))
+
 
 # def F2(y_true, y_pred, beta=2):
 #     p = precision(y_true,y_pred)
@@ -204,13 +216,15 @@ if __name__ == "__main__":
         
         device = "cuda" if torch.cuda.is_available() else "cpu"
         
+        model.to(device)
+        
         val_transforms = T.Compose([
                 T.ToTensor(),
                 T.Resize((image_size, image_size)),
         ])
         val_set = ValDataset(DATA_DIR, transform=val_transforms, with_background=True)
         val_loader = DataLoader(val_set, batch_size=1, shuffle=False, num_workers=16)
-        metrics = [Precision(), Recall(), F2(), DiceScore(), Jac(), Acc(), Confidence()]
+        metrics = [Precision(), Recall(), F1(), F2(), DiceScore(), Jac(), Acc(), Confidence()]
         
         results = calculate_statistics(model, device, val_set, val_loader, metrics)
         print_statistics(results, metrics, f"MODEL FOR FILE: {file.stem}")
