@@ -25,18 +25,18 @@
 
 echo "RUNNING FINAL MODEL FOR 512 IMAGE SIZES: Wide RestNet-50-2"
 python ./hubmap/experiments/TransResUNet/train.py\
-    --name wide_resnet50_2_x512 \
+    --name wide_resnet50_2_x512_more_patience \
     --backbone wide_resnet50_2 \
     --pretrained \
     --model TransResUNet512 \
     --epochs 500 \
     --loss DiceBCELoss \
     --use-lr-scheduler \
-    --lrs-patience 5 \
+    --lrs-patience 10 \
     --use-early-stopping \
     --continue-training \
     --from-checkpoint TransResUNet/wide_resnet50_2_pretrained_warmup_512.pt \
-    --es-patience 50 | tee ./logs/final/eval/wide_resnet50_2_x512.log
+    --es-patience 100 | tee ./logs/final/eval/wide_resnet50_2_x512_more_patience.log
 
 
 # echo "RUNNING FINAL MODEL FOR 512 IMAGE SIZES: Wide RestNet-50-2"
