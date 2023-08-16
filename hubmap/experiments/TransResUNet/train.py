@@ -4,7 +4,6 @@ import time
 from pathlib import Path
 from configs import CONFIG_DIR
 from figures import FIGURES_DIR
-from checkpoints import CHECKPOINT_DIR
 
 import torch
 import torch.optim as optim
@@ -16,7 +15,6 @@ from hubmap.dataset import TrainDataset, ValDataset
 
 from hubmap.experiments.TransResUNet.utils import run
 from hubmap.experiments.TransResUNet.utils import DiceBCELoss, ChannelWeightedDiceBCELoss
-from hubmap.experiments.TransResUNet.statistics import Precision, Recall, F2, DiceScore, Jac, Acc, Confidence, calculate_statistics, print_statistics
 
 from hubmap.training import LRScheduler
 from hubmap.training import EarlyStopping
