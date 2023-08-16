@@ -159,6 +159,7 @@ def run(
     lr_scheduler,
     checkpoint_name,
     continue_training=False,
+    from_checkpoint=None,
 ):
     start_epoch = 1
 
@@ -172,8 +173,8 @@ def run(
 
     if continue_training:
         # Load checkpoint.
-        print("Loading checkpoint...")
-        checkpoint = torch.load(Path(CHECKPOINT_DIR / checkpoint_name))
+        print(f"Loading checkpoint: '{from_checkpoint}'")
+        checkpoint = torch.load(Path(CHECKPOINT_DIR / from_checkpoint))
         model.load_state_dict(checkpoint["model_state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         start_epoch = checkpoint["epoch"] + 1

@@ -36,13 +36,16 @@ parser.add_argument("--model", type=str, required=True)
 # Optional
 # LRScheduler
 parser.add_argument("--use-lr-scheduler", action='store_true')
-parser.add_argument("--lrs-patience", type=str, required=False, default=None)
+parser.add_argument("--lrs-patience", type=int, required=False, default=None)
 # EarlyStopping
 parser.add_argument("--use-early-stopping", action='store_true')
-parser.add_argument("--es-patience", type=str, required=False, default=None)
+parser.add_argument("--es-patience", type=int, required=False, default=None)
 # Loss
 parser.add_argument("--loss", type=str, required=False, default="DiceBCELoss")
 parser.add_argument("--weights", nargs="+", type=int, required=False, default=None)
+# Continue Training
+parser.add_argument("--continue-training", action='store_true')
+parser.add_argument("--from-checkpoint", type=str, required=False, default=None)
 args = parser.parse_args()
 
 print(args)
@@ -87,7 +90,8 @@ BACKBONE = args.backbone
 PRETRAINED = args.pretrained
 
 LR = 1e-4
-CONTINUE_TRAINING = False
+CONTINUE_TRAINING = args.continue_training
+FROM_CHECKPOINT = args.from_checkpoint
 
 FIGURES_CHECKPOINT_PATH = Path(FIGURES_DIR, "TransResUNet", f"{CHECKPOINT}")
 os.makedirs(FIGURES_CHECKPOINT_PATH, exist_ok=True)
@@ -163,6 +167,7 @@ result = run(
     lr_scheduler=lr_scheduler,
     checkpoint_name=CHECKPOINT_NAME,
     continue_training=CONTINUE_TRAINING,
+    from_checkpoint=FROM_CHECKPOINT
 )
 total = time.time() - start
 

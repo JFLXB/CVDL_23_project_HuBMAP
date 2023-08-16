@@ -3,37 +3,37 @@
 mkdir -p ./logs/final/pretrained
 
 echo "WARMUP x PRETRAINED x 512"
-python ./hubmap/experiments/TransResUNet/train.py\
-    --name resnet50_pretrained_warmup_512 \
-    --epochs 20 \
-    --backbone resnet50 \
-    --pretrained \
-    --model TransResUNet512 \
-    --loss DiceBCELoss | tee ./logs/final/pretrained/resnet50_pretrained_warmup_512.log
+# python ./hubmap/experiments/TransResUNet/train.py\
+#     --name resnet50_pretrained_warmup_512 \
+#     --epochs 20 \
+#     --backbone resnet50 \
+#     --pretrained \
+#     --model TransResUNet512 \
+#     --loss DiceBCELoss | tee ./logs/final/pretrained/resnet50_pretrained_warmup_512.log
 
-python ./hubmap/experiments/TransResUNet/train.py\
-    --name resnet101_pretrained_warmup_512 \
-    --epochs 20 \
-    --backbone resnet101 \
-    --pretrained \
-    --model TransResUNet512 \
-    --loss DiceBCELoss | tee ./logs/final/pretrained/resnet101_pretrained_warmup_512.log
+# python ./hubmap/experiments/TransResUNet/train.py\
+#     --name resnet101_pretrained_warmup_512 \
+#     --epochs 20 \
+#     --backbone resnet101 \
+#     --pretrained \
+#     --model TransResUNet512 \
+#     --loss DiceBCELoss | tee ./logs/final/pretrained/resnet101_pretrained_warmup_512.log
 
-python ./hubmap/experiments/TransResUNet/train.py\
-    --name resnet152_pretrained_warmup_512 \
-    --epochs 20 \
-    --backbone resnet152 \
-    --pretrained \
-    --model TransResUNet512 \
-    --loss DiceBCELoss | tee ./logs/final/pretrained/resnet152_pretrained_warmup_512.log
+# python ./hubmap/experiments/TransResUNet/train.py\
+#     --name resnet152_pretrained_warmup_512 \
+#     --epochs 20 \
+#     --backbone resnet152 \
+#     --pretrained \
+#     --model TransResUNet512 \
+#     --loss DiceBCELoss | tee ./logs/final/pretrained/resnet152_pretrained_warmup_512.log
 
-python ./hubmap/experiments/TransResUNet/train.py\
-    --name resnext50_32x4d_pretrained_warmup_512 \
-    --epochs 20 \
-    --backbone resnext50_32x4d \
-    --pretrained \
-    --model TransResUNet512 \
-    --loss DiceBCELoss | tee ./logs/final/pretrained/resnext50_32x4d_pretrained_warmup_512.log
+# python ./hubmap/experiments/TransResUNet/train.py\
+#     --name resnext50_32x4d_pretrained_warmup_512 \
+#     --epochs 20 \
+#     --backbone resnext50_32x4d \
+#     --pretrained \
+#     --model TransResUNet512 \
+#     --loss DiceBCELoss | tee ./logs/final/pretrained/resnext50_32x4d_pretrained_warmup_512.log
 
 python ./hubmap/experiments/TransResUNet/train.py\
     --name resnext101_32x8d_pretrained_warmup_512 \
@@ -58,6 +58,7 @@ python ./hubmap/experiments/TransResUNet/train.py\
     --pretrained \
     --model TransResUNet512 \
     --loss DiceBCELoss | tee ./logs/final/pretrained/wide_resnet101_2_pretrained_warmup_512.log
+
 
 mkdir -p ./logs/final/scratch
 echo "WARMUP x SCRATCH x 512"
