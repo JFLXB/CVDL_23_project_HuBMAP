@@ -72,7 +72,7 @@ class F1:
     def __call__(self, prediction, target):
         p = Precision()(prediction, target)
         r = Recall()(prediction, target)
-        return 2 * ((p * r) / float((p + r)))
+        return (2 * p * r) / float((p + r))
 
 
 # def F2(y_true, y_pred, beta=2):
