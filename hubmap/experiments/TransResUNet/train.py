@@ -172,5 +172,5 @@ total = time.time() - start
 print(f"TRAINING TOOK A TOTAL OF '{total}' FOR '{NUM_EPOCHS}' EPOCHS => PER EPOCH TIME: '{total / NUM_EPOCHS}'")
 
 loss_fig, benchmark_fig = visualize_result(result)
-loss_fig.savefig(Path(FIGURES_CHECKPOINT_PATH, "results_loss.png"))
-benchmark_fig.savefig(Path(FIGURES_CHECKPOINT_PATH, "results_accuracy.png"))
+loss_fig.savefig(Path(FIGURES_CHECKPOINT_PATH, "results_loss.svg"))
+benchmark_fig.savefig(Path(FIGURES_CHECKPOINT_PATH, "results_accuracy.svg"))
