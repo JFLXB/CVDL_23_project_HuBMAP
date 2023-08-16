@@ -197,9 +197,9 @@ def run(
 
         log = f"Epoch {epoch}/{num_epochs} - Summary: "
         log += f"Train Loss: {np.mean(train_losses):.4f} - "
-        log += f"Acc: {np.mean(train_accs):.4f} --- "
+        # log += f"Acc: {np.mean(train_accs):.4f} --- "
         log += f"Val Loss: {np.mean(val_losses):.4f} - "
-        log += f"Acc: {np.mean(val_accs):.4f}"
+        # log += f"Acc: {np.mean(val_accs):.4f}"
         print(log)
 
         data_to_save = {
