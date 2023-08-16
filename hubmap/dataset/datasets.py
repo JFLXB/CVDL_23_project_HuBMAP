@@ -140,7 +140,7 @@ class AbstractDataset(ABC, Dataset):
     def __getitem__(self, index):
         pass
 
-
+    
 # Dataset for all annotated images,
 # index operations return mask in the following format:
 # [mask_idx, h, w] where mask_dix coresponds to:
@@ -148,25 +148,11 @@ class AbstractDataset(ABC, Dataset):
 # mask_idx:1 => glomerulus
 # mask_idx:2 => unsure
 # mask_idx:3 => background
-class BaseDataset(AbstractDataset):
-    def __init__(self, image_dir, transform=None, with_background=False, as_id_mask=False):
-        super().__init__(image_dir, transform, with_background, as_id_mask)
-
-    def __len__(self):
-        return len(self.tiles_dicts)
-
-    def __getitem__(self, index):
-        img_data = self.tiles_dicts[index]
-        image_path = f'{self.image_dir}/train/{img_data["id"]}.tif'
-        image = np.asarray(Image.open(image_path))
-        mask = generate_mask(img_data, with_background=self.with_background, as_id_mask=self.as_id_mask)
-
-        if self.transform is not None:
-            image, mask = self.transform(image, mask)
-
-        return image, mask
-    
-
+# setting the as_id_mask=True will return the mask in this format:
+# [1, h, w] where different pixel values encode the different labels:
+# 0 => blood_vessel
+# 1 =>  glomerulus
+# 3 => background
 class TrainTestValBaseDataset(AbstractDataset):
     def __init__(self, image_dir, sub_dir, transform=None, with_background=False, as_id_mask=False):
         super().__init__(image_dir, transform, with_background, as_id_mask)
@@ -216,55 +202,3 @@ class TestDataset(TrainTestValBaseDataset):
 class ValDataset(TrainTestValBaseDataset):
     def __init__(self, image_dir, transform=None, with_background=False, as_id_mask=False):
         super().__init__(image_dir, 'val/', transform, with_background, as_id_mask)
-
-
-
-def _gen_dict_from_json_list(lst):
-    out = dict()
-    for jsn in lst:
-        out[jsn["id"]] = jsn
-    return out
-
-
-# Dataset for all EXPERT annotated images (422 tiles),
-# index operations return mask in the following format:
-# [mask_idx, h, w] where mask_dix coresponds to:
-# mask_idx: 0 => blood_vessel
-# mask_idx:1 => glomerulus
-# mask_idx:2 => unsure
-class ExpertDataset(AbstractDataset):
-    def __init__(self, image_dir, transform=None):
-        super().__init__(image_dir, transform)
-        self.d1_ids = self.meta_df.loc[self.meta_df["dataset"] == 1]["id"].tolist()
-        self.id_map = _gen_dict_from_json_list(self.tiles_dicts)
-
-    def __len__(self):
-        return len(self.d1_ids)
-
-    def __getitem__(self, index):
-        img_data = self.id_map[self.d1_ids[index]]
-        image_path = f'{self.image_dir}/train/{img_data["id"]}.tif'
-        image = np.asarray(Image.open(image_path))
-        mask = generate_mask(img_data)
-
-        if self.transform is not None:
-            image, mask = self.transform(image, mask)
-
-        return image, mask
-
-
-# ich mache nicht die regeln :D
-# https://discuss.pytorch.org/t/torch-utils-data-dataset-random-split/32209
-class DatasetFromSubset(AbstractDataset):
-    def __init__(self, subset, transform=None):
-        self.subset = subset
-        self.transform = transform
-
-    def __getitem__(self, index):
-        x, y = self.subset[index]
-        if self.transform:
-            x, y = self.transform(x, y)
-        return x, y
-
-    def __len__(self):
-        return len(self.subset)
