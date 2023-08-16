@@ -263,46 +263,6 @@ def accuracy(target, prediction, cls_idx):
     return correct / total
 
 
-# train_transformations = T.Compose(
-#     [
-#         T.ToTensor(),
-#         T.Resize((IMG_DIM, IMG_DIM)),
-#         T.RandomHorizontalFlip(),
-#         T.RandomVerticalFlip(),
-#         T.RandomCrop((IMG_DIM, IMG_DIM)),
-#     ]
-# )
-
-# val_transformations = T.Compose(
-#     [
-#         T.ToTensor(),
-#         T.Resize((IMG_DIM, IMG_DIM)),
-#     ]
-# )
-
-# train_dataset = TrainDataset(DATA_DIR, transform=train_transformations, with_background=True)
-# val_dataset = ValDataset(DATA_DIR, transform=val_transformations, with_background=True)
-
-# train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=16)
-# val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=16)
-
-# device = "cuda" if torch.cuda.is_available() else "cpu"
-
-# model = TResUnet(num_classes=4)
-# model = model.to(device)
-
-# optimizer = optim.Adam(model.parameters(), lr=1e-3)
-# criterion = DiceBCELoss()
-# learning_rate_scheduler = LRScheduler(optimizer, patience=PATIENCE)
-# early_stopping = None
-
-# iou = IoU(name="IoU")
-# iou_blood_vessel = IoU(class_index=label2id["blood_vessel"], name="IoUBV")
-# iou_glomerulus = IoU(class_index=label2id["glomerulus"], name="IoUGL")
-# iou_unsure = IoU(class_index=label2id["unsure"], name="IoUUN")
-# iou_background = IoU(class_index=label2id["background"], name="IoUBG")
-
-
 def visualize_detailed_results(model, image, target, device, checkpoint_name):
     plt.style.use(["science"])
 
@@ -318,22 +278,6 @@ def visualize_detailed_results(model, image, target, device, checkpoint_name):
     classes_per_channel.scatter_(1, classes, 1)
     classes_per_channel = classes_per_channel.squeeze(0)
     classes = classes.squeeze(0).cpu()
-
-    # iou = IoU()
-    # iou_score = iou(classes_per_channel, target).item()
-    # iou_blood_vessel = IoU(class_index=label2id["blood_vessel"])
-    # iou_blood_vessel_score = iou_blood_vessel(classes_per_channel, target).item()
-    # iou_glomerulus = IoU(class_index=label2id["glomerulus"])
-    # iou_glomerulus_score = iou_glomerulus(classes_per_channel, target).item()
-    # iou_unsure = IoU(class_index=label2id["unsure"])
-    # iou_unsure_score = iou_unsure(classes_per_channel, target).item()
-    # iou_background = IoU(class_index=label2id["background"])
-    # iou_background_score = iou_background(classes_per_channel, target).item()
-
-    # acc_bv = accuracy(target, classes, 0)
-    # acc_gl = accuracy(target, classes, 1)
-    # acc_un = accuracy(target, classes, 2)
-    # acc_bg = accuracy(target, classes, 3)
 
     image = image.cpu()
     classes_per_channel = classes_per_channel.cpu()

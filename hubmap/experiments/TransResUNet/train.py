@@ -174,23 +174,3 @@ print(f"TRAINING TOOK A TOTAL OF '{total}' FOR '{NUM_EPOCHS}' EPOCHS => PER EPOC
 loss_fig, benchmark_fig = visualize_result(result)
 loss_fig.savefig(Path(FIGURES_CHECKPOINT_PATH, "results_loss.png"))
 benchmark_fig.savefig(Path(FIGURES_CHECKPOINT_PATH, "results_accuracy.png"))
-
-
-# # STATISTICS
-# val_set = ValDataset(DATA_DIR, transform=val_transforms, with_background=True)
-# val_loader = DataLoader(val_set, batch_size=1, shuffle=False, num_workers=16)
-# metrics = [Precision(), Recall(), F2(), DiceScore(), Jac(), Acc(), Confidence()]
-# # STATISTICS FOR LAST MODEL
-# best_model_results = calculate_statistics(model, device, val_set, val_loader, metrics)
-# print_statistics(best_model_results, metrics, "LAST MODEL STATISTICS")
-# # STATISTICS FOR BEST MODEL
-# parent = CHECKPOINT_NAME.parent
-# best_checkpoint_name = parent / f"{CHECKPOINT_NAME.stem}_best{CHECKPOINT_NAME.suffix}"
-# best_checkpoint_path = Path(CHECKPOINT_DIR / best_checkpoint_name)
-# best_model = MODEL(num_classes=4, backbone=BACKBONE, pretrained=PRETRAINED)
-# best_model_checkpoint = torch.load(best_checkpoint_path)
-# best_model.load_state_dict(best_model_checkpoint["model_state_dict"])
-# best_model = best_model.to(device)
-
-# best_model_results = calculate_statistics(best_model, device, val_set, val_loader, metrics)
-# print_statistics(best_model_results, metrics, "BEST MODEL STATISTICS")
