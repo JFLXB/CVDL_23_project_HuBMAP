@@ -66,7 +66,7 @@ test_transformations = T.Compose(
 load_annotated_data = make_annotated_loader(train_transformations, test_transformations)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-checkpoint_name = f"fct_overfit_img_size_{IMG_DIM}.pt"
+checkpoint_name = f"fct_overfit_mock_img_size_{IMG_DIM}.pt"
 
 model = FCT(in_channels=3, num_classes=2).to(device)
 model.apply(init_weights)
@@ -95,15 +95,15 @@ image[:, 1, 0 : 4 * box_size, 3 * box_size : 4 * box_size] = 1
 image[:, 1, box_size : 2 * box_size, 0 : 4 * box_size] = 1
 image[:, 1, 3 * box_size : 4 * box_size, 0 : 4 * box_size] = 1
 
-target = torch.zeros((1, 2, IMG_DIM, IMG_DIM))
+target = torch.zeros((1, 1, IMG_DIM, IMG_DIM))
 target[:, 0, 0:box_size, 0:box_size] = 1
 target[:, 0, 2 * box_size : 3 * box_size, 0:box_size] = 1
 target[:, 0, 0:box_size, 2 * box_size : 3 * box_size] = 1
 target[:, 0, 2 * box_size : 3 * box_size, 2 * box_size : 3 * box_size] = 1
-# target[:, 1, 0 : 4 * box_size, box_size : 2 * box_size] = 1
-# target[:, 1, 0 : 4 * box_size, 3 * box_size : 4 * box_size] = 1
-# target[:, 1, box_size : 2 * box_size, 0 : 4 * box_size] = 1
-# target[:, 1, 3 * box_size : 4 * box_size, 0 : 4 * box_size] = 1
+target[:, 0, 0 : 4 * box_size, box_size : 2 * box_size] = 0
+target[:, 0, 0 : 4 * box_size, 3 * box_size : 4 * box_size] = 0
+target[:, 0, box_size : 2 * box_size, 0 : 4 * box_size] = 0
+target[:, 1, 3 * box_size : 4 * box_size, 0 : 4 * box_size] = 0
 
 
 # SAVE IMAGES

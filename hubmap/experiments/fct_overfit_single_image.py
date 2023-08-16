@@ -6,6 +6,7 @@ import torch.optim as optim
 from hubmap.experiments.load_data import make_annotated_loader
 from hubmap.dataset import transforms as T
 from hubmap.losses import MultiOutputBCELoss
+from hubmap.losses import BCEDiceLoss
 from hubmap.metrics import IoU
 from hubmap.training import train
 from hubmap.training import LRScheduler
@@ -50,18 +51,8 @@ NUM_EPOCHS = args.epochs
 WITH_BACKGROUND = args.add_background
 NUM_CLASSES = 4 if WITH_BACKGROUND else 3
 
-train_transformations = T.Compose(
-    [
-        T.ToTensor(),
-        T.Resize((IMG_DIM, IMG_DIM)),
-        T.RandomHorizontalFlip(),
-        T.RandomVerticalFlip(),
-        T.RandomCrop(size=(IMG_DIM, IMG_DIM)),
-        T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-    ]
-)
 
-test_transformations = T.Compose(
+transformations = T.Compose(
     [
         T.ToTensor(),
         T.Resize((IMG_DIM, IMG_DIM)),
@@ -69,13 +60,13 @@ test_transformations = T.Compose(
     ]
 )
 
-load_annotated_data = make_annotated_loader(
-    train_transformations, test_transformations, with_background=WITH_BACKGROUND
-)
+# load_annotated_data = make_annotated_loader(
+#     train_transformations, test_transformations, with_background=WITH_BACKGROUND
+# )
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 checkpoint_name = (
-    f"fct_trial_batch_size_{args.batch_size}_img_size_{args.image_size}.pt"
+    f"fct_overfit_img_size_{args.image_size}.pt"
 )
 
 model = FCT(in_channels=3, num_classes=NUM_CLASSES).to(device)
@@ -85,13 +76,24 @@ optimizer = optim.Adam(model.parameters(), lr=1e-3)
 # criterion = MultiOutputBCELoss(
 #     weights=[0.14, 0.29, 0.57], interpolation_strategy="bilinear"
 # )
+# criterion = BCEDiceLoss()
 criterion = nn.BCELoss()
 
 # WE ARE ONLY INTERESTED IN THE IoU OF THE BLOOD VESSEL CLASS FOR NOW.
-benchmark = IoU(class_index=0)
-train_loader, test_loader = load_annotated_data(BATCH_SIZE)
-lr_scheduler = LRScheduler(optimizer, patience=5, min_lr=1e-6, factor=0.8)
+# benchmark = IoU(class_index=0)
+benchmark = IoU()
+# train_loader, test_loader = load_annotated_data(BATCH_SIZE)
+# lr_scheduler = LRScheduler(optimizer, patience=20, min_lr=1e-6, factor=0.8)
 # early_stopping = EarlyStopping(patience=50, min_delta=0.0)
+
+from hubmap.dataset import BaseDataset
+from hubmap.data import DATA_DIR
+dataset = BaseDataset(DATA_DIR, transform=transformations, with_background=True)
+image, target = dataset[0]
+image, target = image.unsqueeze(0).to(device), target.unsqueeze(0).to(device)
+
+train_loader = [(image, target)]
+test_loader = [(image, target)]
 
 result = train(
     num_epochs=NUM_EPOCHS,
@@ -103,7 +105,7 @@ result = train(
     device=device,
     benchmark=benchmark,
     checkpoint_name=checkpoint_name,
-    learning_rate_scheduler=lr_scheduler,
+    # learning_rate_scheduler=lr_scheduler,
     loss_out_index=2,
     benchmark_out_index=2,
 )
