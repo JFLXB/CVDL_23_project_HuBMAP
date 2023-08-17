@@ -1,0 +1,39 @@
+
+Done: with lr=1e-3, without scheduler
+python ./hubmap/experiments/DUCKNet/train.py --name ducknet_dice_128_20 --epochs 20 --img-size 128 --model DUCKNet --loss DiceLoss
+python ./hubmap/experiments/DUCKNet/train.py --name ducknet_diceBCE_128_20 --epochs 20 --img-size 128 --model DUCKNet --loss DiceBCELoss
+
+python ./hubmap/experiments/DUCKNet/train.py --name ducknet_pretrained_dice_128_20 --epochs 20 --img-size 128 --model DUCKNetPretrained --loss DiceLoss
+python ./hubmap/experiments/DUCKNet/train.py --name ducknet_pretrained_diceBCE_128_20 --epochs 20 --img-size 128 --model DUCKNetPretrained --loss DiceBCELoss
+
+Not yet done:
+python ./hubmap/experiments/DUCKNet/train.py --name ducknet_weightedDiceBCE_128_20 --epochs 20 --img-size 128 --model DUCKNet --loss ChannelWeightedDiceBCELoss
+
+
+python ./hubmap/experiments/DUCKNet/train.py --name ducknet_pretrained_cross_entropy_128_20 --epochs 20 --img-size 128 --model DUCKNetPretrained --loss CrossEntropyLoss
+
+
+
+
+
+
+
+
+
+
+
+Recap:
+    - 128x128
+        -Ducknet, dice loss, 20 epochs
+        -Ducknet, BCE dice loss, 20 epochs
+        -DucknetPREtrained, dice loss, 20 epochs
+        -DucknetPREtrained, BCE dice loss, 20 epochs
+        -DucknetPREtrained, Focal loss, 20 epochs (0.4, 0.15, 0.15, 0.3)
+        -DucknetPREtrained, cross entropy, 20 epochs
+
+    -256x256
+        -DucknetPREtrained, dice loss, 20 epochs
+        -DUCKNetPretrained, BCE dice loss, 20 epochs
+        -DUCKNetPretrained, Focal loss, 20 epochs (0.4, 0.15, 0.15, 0.3)
+
+

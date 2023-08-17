@@ -80,6 +80,25 @@ class ChannelWeightedDiceBCELoss(nn.Module):
         Dice_BCE = BCE + dice_loss
 
         return Dice_BCE
+    
+class FocalLoss(nn.Module):
+    def __init__(self, alpha, gamma=2, reduction='mean'):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+
+    def forward(self, input, target):
+        ce_loss = nn.functional.cross_entropy(input, target, reduction='none')  # Shape: (batch_size, H, W)
+        pt = torch.exp(-ce_loss)
+        alpha_t = self.alpha[target.view(-1)].view(target.size())  # Reshape alpha to match target shape
+        loss = alpha_t * (1 - pt) ** self.gamma * ce_loss
+        if self.reduction == 'mean':
+            return loss.mean()
+        elif self.reduction == 'sum':
+            return loss.sum()
+        else:
+            return loss
 
 
 def train(model, loader, optimizer, criterion, device):
@@ -188,7 +207,6 @@ def run(
             model, train_loader, optimizer, criterion, device
         )
         val_losses, val_accs = validate(model, val_loader, criterion, device)
-
         training_loss_history.append(train_losses)
         training_acc_history.append(train_accs)
 
@@ -201,6 +219,7 @@ def run(
         log += f"Val Loss: {np.mean(val_losses):.4f} - "
         # log += f"Acc: {np.mean(val_accs):.4f}"
         print(log)
+
 
         data_to_save = {
             "early_stopping": False,
