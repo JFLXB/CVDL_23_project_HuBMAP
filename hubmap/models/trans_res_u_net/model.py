@@ -1,3 +1,10 @@
+"""
+Sources:
+ - https://github.com/nikhilroxtomar/TransResUNet
+ - https://arxiv.org/pdf/2206.08985.pdf
+
+Changes were made to the original code to work with our task at hand.
+"""
 import torch
 import torch.nn as nn
 from hubmap.models.trans_res_u_net.resnet import (
@@ -168,22 +175,16 @@ backbone_map = {
     "wide_resnet101_2": wide_resnet101_2,
 }
 
-# bottleneck_in = {
-#     "resnet18": 512,
-#     "resnet34": 512,
-# }
-
 
 class TResUnet(nn.Module):
     def __init__(
-        self, num_classes: int, backbone: str = "resnet50", pretrained: bool = True
+        self, num_classes: int, backbone: str = "resnet50", pretrained: bool = True, verbose: bool = False
     ):
         super().__init__()
+        self.verbose = verbose
 
         """ ResNet X """
         backbone = backbone_map[backbone](pretrained=pretrained)
-        # Added the following to dynamically adjust the number of input channels
-        # ic = bottleneck_in.get(backbone, 1024)
 
         self.layer0 = nn.Sequential(backbone.conv1, backbone.bn1, backbone.relu)
         self.layer1 = nn.Sequential(backbone.maxpool, backbone.layer1)
@@ -193,8 +194,6 @@ class TResUnet(nn.Module):
         """ Bridge blocks """
         self.b1 = Bottleneck(1024, 256, 256, num_layers=2)
         self.b2 = DilatedConv(1024, 256)
-        # self.b1 = Bottleneck(ic, 256, 256, num_layers=2)
-        # self.b2 = DilatedConv(ic, 256)
 
         """ Decoder """
         self.d1 = DecoderBlock([512, 512], 256)
@@ -206,21 +205,34 @@ class TResUnet(nn.Module):
 
     def forward(self, x, heatmap=None):
         s0 = x
+        print(s0.size()) if self.verbose else None
         s1 = self.layer0(s0)  ## [-1, 64, h/2, w/2]
+        print(s1.size()) if self.verbose else None
         s2 = self.layer1(s1)  ## [-1, 256, h/4, w/4]
+        print(s2.size()) if self.verbose else None
         s3 = self.layer2(s2)  ## [-1, 512, h/8, w/8]
+        print(s3.size()) if self.verbose else None
         s4 = self.layer3(s3)  ## [-1, 1024, h/16, w/16]
+        print(s4.size()) if self.verbose else None
 
         b1 = self.b1(s4)
+        print(b1.size()) if self.verbose else None
         b2 = self.b2(s4)
+        print(b2.size()) if self.verbose else None
         b3 = torch.cat([b1, b2], axis=1)
+        print(b3.size()) if self.verbose else None
 
         d1 = self.d1(b3, s3)
+        print(d1.size()) if self.verbose else None
         d2 = self.d2(d1, s2)
+        print(d2.size()) if self.verbose else None
         d3 = self.d3(d2, s1)
+        print(d3.size()) if self.verbose else None
         d4 = self.d4(d3, s0)
+        print(d4.size()) if self.verbose else None
 
         y = self.output(d4)
+        print(y.size()) if self.verbose else None
 
         if heatmap != None:
             hmap = save_feats_mean(d4)
@@ -230,10 +242,14 @@ class TResUnet(nn.Module):
 
 
 class TResUnet512(nn.Module):
+    """
+    Adaption of the `TResUnet` model by us, to work with 512x512 images.
+    """
     def __init__(
-        self, num_classes: int, backbone: str = "resnet50", pretrained: bool = True
+        self, num_classes: int, backbone: str = "resnet50", pretrained: bool = True, verbose: bool = False
     ):
         super().__init__()
+        self.verbose = verbose
 
         """ ResNet X """
         backbone = backbone_map[backbone](pretrained=pretrained)
@@ -259,23 +275,38 @@ class TResUnet512(nn.Module):
 
     def forward(self, x, heatmap=None):
         s0 = x
+        print(s0.size()) if self.verbose else None
         s1 = self.layer0(s0)  ## [-1, 64, h/2, w/2]
+        print(s1.size()) if self.verbose else None
         s2 = self.layer1(s1)  ## [-1, 256, h/4, w/4]
+        print(s2.size()) if self.verbose else None
         s3 = self.layer2(s2)  ## [-1, 512, h/8, w/8]
+        print(s3.size()) if self.verbose else None
         s4 = self.layer3(s3)  ## [-1, 1024, h/16, w/16]
+        print(s4.size()) if self.verbose else None
         s5 = self.layer4(s4)  ## [-1, 2048, h/32, w/32]
+        print(s5.size()) if self.verbose else None
 
         b1 = self.b1(s5)
+        print(b1.size()) if self.verbose else None
         b2 = self.b2(s5)
+        print(b2.size()) if self.verbose else None
         b3 = torch.cat([b1, b2], axis=1)
+        print(b3.size()) if self.verbose else None
 
         d1 = self.d1(b3, s4)
+        print(d1.size()) if self.verbose else None
         d2 = self.d2(d1, s3)
+        print(d2.size()) if self.verbose else None
         d3 = self.d3(d2, s2)
+        print(d3.size()) if self.verbose else None
         d4 = self.d4(d3, s1)
+        print(d4.size()) if self.verbose else None
         d5 = self.d5(d4, s0)
+        print(d5.size()) if self.verbose else None
 
         y = self.output(d5)
+        print(y.size()) if self.verbose else None
 
         if heatmap != None:
             hmap = save_feats_mean(d4)
@@ -285,7 +316,11 @@ class TResUnet512(nn.Module):
 
 
 if __name__ == "__main__":
-    x = torch.randn((8, 3, 256, 256))
+    x = torch.randn((1, 3, 256, 256))
     model = TResUnet(num_classes=4)
     y = model(x)
-    print(y.shape)
+    print('-=-=-=-=-=-=-=-=-=-=-=-=-=-')
+    x = torch.randn((1, 3, 512, 512))
+    model = TResUnet512(num_classes=4)
+    y = model(x)
+

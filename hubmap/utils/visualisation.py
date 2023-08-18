@@ -36,5 +36,4 @@ def visualize_results(f: int, t: int, data, model, device):
         axs[i][1].imshow(mask, alpha=0.5)
 
     plt.tight_layout()
-    #     plt.suptitle("Overlay of Ground Truth and Prediction (Sample from Training Data)")
     plt.show()

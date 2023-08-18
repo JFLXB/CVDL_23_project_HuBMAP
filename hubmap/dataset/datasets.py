@@ -243,7 +243,7 @@ class TestDataset(TrainTestValBaseDataset):
         self, image_dir, transform=None, with_background=False, as_id_mask=False
     ):
         super().__init__(image_dir, "test", transform, with_background, as_id_mask)
-        assert False, "are you sure you want to bias yourself (╬ ಠ益ಠ) ? "
+        # assert False, "are you sure you want to bias yourself (╬ ಠ益ಠ) ? "
 
 
 class ValDataset(TrainTestValBaseDataset):

@@ -1,11 +1,9 @@
 """
-Code copied from:
-https://debuggercafe.com/using-learning-rate-scheduler-and-early-stopping-with-pytorch/
+Source: https://debuggercafe.com/using-learning-rate-scheduler-and-early-stopping-with-pytorch/
 """
 import torch
 
 
-# TODO: Maybe implement more learning rate scheduler options.
 class LRScheduler:
     """
     Learning rate scheduler. If the value does not decrease/increase for the

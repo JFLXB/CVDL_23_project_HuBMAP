@@ -1,3 +1,10 @@
+"""
+Sources:
+ - https://github.com/nikhilroxtomar/TransResUNet
+ - https://arxiv.org/pdf/2206.08985.pdf
+
+Changes were made to the original code to work with our task at hand.
+"""
 import torch
 import torch.nn as nn
 from torch.hub import load_state_dict_from_url

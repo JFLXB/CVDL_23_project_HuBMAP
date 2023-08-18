@@ -1,16 +1,18 @@
+"""
+Source: https://github.com/nikhilroxtomar/TransResUNet
+"""
+import torch
 import torch.nn.functional as F
 import torch.nn as nn
 
 
-class BCEDiceLoss(nn.Module):
-    def __init__(self, weight=None, size_average=True):
-        super(BCEDiceLoss, self).__init__()
+class DiceBCELoss(nn.Module):
+    def __init__(self, **kwargs):
+        super(DiceBCELoss, self).__init__()
 
     def forward(self, inputs, targets, smooth=1):
-        # comment out if your model contains a sigmoid or equivalent activation layer
-        # inputs = F.sigmoid(inputs)
+        inputs = torch.sigmoid(inputs)
 
-        # flatten label and prediction tensors
         inputs = inputs.reshape(-1)
         targets = targets.reshape(-1)
 

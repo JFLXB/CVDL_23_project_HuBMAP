@@ -40,7 +40,7 @@ parser.add_argument("--use-early-stopping", action='store_true')
 parser.add_argument("--es-patience", type=int, required=False, default=None)
 # Loss
 parser.add_argument("--loss", type=str, required=False, default="DiceBCELoss")
-parser.add_argument("--weights", nargs="+", type=int, required=False, default=None)
+parser.add_argument("--weights", nargs="+", type=float, required=False, default=None)
 # Continue Training
 parser.add_argument("--continue-training", action='store_true')
 parser.add_argument("--from-checkpoint", type=str, required=False, default=None)
@@ -69,6 +69,7 @@ if args.loss == "DiceBCELoss":
 elif args.loss == "ChannelWeightedDiceBCELoss":
     LOSS = ChannelWeightedDiceBCELoss
     WEIGHT = torch.tensor(args.weights)
+    print("ChannelWeightedDiceBCELoss with weights: ", WEIGHT)
     
 LR_SCHEDULER = None
 LRS_PATIENCE = None
