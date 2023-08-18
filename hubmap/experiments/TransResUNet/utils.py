@@ -5,9 +5,10 @@ import torch.nn.functional as F
 import numpy as np
 import scienceplots as _
 from checkpoints import CHECKPOINT_DIR
+from hubmap.metrics import Acc
 
 
-def train(model, loader, optimizer, criterion, device):
+def train(model, loader, optimizer, criterion, device, acc):
     training_losses = []
     training_accuracies = []
 
@@ -26,12 +27,7 @@ def train(model, loader, optimizer, criterion, device):
         classes = torch.argmax(probs, dim=1, keepdims=True)
         classes_per_channel = torch.zeros_like(predictions)
         classes_per_channel.scatter_(1, classes, 1)
-
-        targets_classes = torch.argmax(targets, dim=1, keepdims=True)
-        mask = targets_classes == 0
-        correct = (classes[mask] == targets_classes[mask]).sum()
-        total = mask.sum()
-        accuracy = correct / total
+        accuracy = acc(classes_per_channel, targets).mean()
 
         training_losses.append(loss.item())
         training_accuracies.append(accuracy.item())
@@ -39,7 +35,7 @@ def train(model, loader, optimizer, criterion, device):
     return training_losses, training_accuracies
 
 
-def validate(model, loader, criterion, device):
+def validate(model, loader, criterion, device, acc):
     validation_losses = []
     validation_accuracies = []
 
@@ -57,14 +53,10 @@ def validate(model, loader, criterion, device):
             classes_per_channel = torch.zeros_like(predictions)
             classes_per_channel.scatter_(1, classes, 1)
 
-            targets_classes = torch.argmax(targets, dim=1, keepdims=True)
-            mask = targets_classes == 0
-            correct = (classes[mask] == targets_classes[mask]).sum()
-            total = mask.sum()
-            acc = correct / total
+            accuracy = acc(classes_per_channel, targets).mean()
 
         validation_losses.append(loss.item())
-        validation_accuracies.append(acc.item())
+        validation_accuracies.append(accuracy.item())
 
     return validation_losses, validation_accuracies
 
@@ -83,6 +75,8 @@ def run(
     continue_training=False,
     from_checkpoint=None,
 ):
+    acc = Acc()
+
     start_epoch = 1
 
     training_loss_history = []
@@ -107,9 +101,9 @@ def run(
 
     for epoch in range(start_epoch, num_epochs + 1):
         train_losses, train_accs = train(
-            model, train_loader, optimizer, criterion, device
+            model, train_loader, optimizer, criterion, device, acc
         )
-        val_losses, val_accs = validate(model, val_loader, criterion, device)
+        val_losses, val_accs = validate(model, val_loader, criterion, device, acc)
 
         training_loss_history.append(train_losses)
         training_acc_history.append(train_accs)

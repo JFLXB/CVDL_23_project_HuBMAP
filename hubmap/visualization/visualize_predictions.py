@@ -5,7 +5,7 @@ import matplotlib.patches as mpatches
 
 from hubmap.dataset import label2id, label2title
 from hubmap.visualization.visualize_mask import mask_to_rgb, mask_to_rgba
-from hubmap.metrics import DiceLoss, DiceBCELoss, ChannelWeightedDiceBCELoss
+from hubmap.losses import DiceLoss, DiceBCELoss, ChannelWeightedDiceBCELoss
 
 
 def visualize_detailed_results(model, image, target, device, checkpoint_name):
