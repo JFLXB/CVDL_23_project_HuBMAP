@@ -159,13 +159,11 @@ class AbstractDataset(ABC, Dataset):
 # mask_idx:1 => glomerulus
 # mask_idx:2 => unsure
 # mask_idx:3 => background
-<<<<<<< HEAD
 # setting the as_id_mask=True will return the mask in this format:
 # [1, h, w] where different pixel values encode the different labels:
 # 0 => blood_vessel
 # 1 =>  glomerulus
 # 3 => background
-=======
 class BaseDataset(AbstractDataset):
     def __init__(
         self, image_dir, transform=None, with_background=False, as_id_mask=False
@@ -189,7 +187,6 @@ class BaseDataset(AbstractDataset):
         return image, mask
 
 
->>>>>>> main
 class TrainTestValBaseDataset(AbstractDataset):
     def __init__(
         self,

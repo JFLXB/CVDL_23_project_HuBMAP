@@ -14,7 +14,7 @@ from checkpoints import CHECKPOINT_DIR
 from hubmap.data import DATA_DIR
 from hubmap.dataset import TrainDataset, ValDataset
 from hubmap.dataset import label2id, label2title
-from hubmap.metrics import IoU
+from hubmap.metrics.jac import Jac as IoU
 from hubmap.training import LRScheduler
 from hubmap.training import EarlyStopping
 from hubmap.visualization.visualize_mask import mask_to_rgb, mask_to_rgba
