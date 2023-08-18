@@ -1,5 +1,6 @@
 from PIL import Image
 from torch.utils.data import Dataset
+import torchvision.transforms as T
 import numpy as np
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -8,18 +9,10 @@ import json
 import pandas as pd
 import os
 from abc import ABC, abstractmethod
-from pathlib import Path
 
 
 id2label = {0: "blood_vessel", 1: "glomerulus", 2: "unsure", 3: "background"}
 label2id = {"blood_vessel": 0, "glomerulus": 1, "unsure": 2, "background": 3}
-label2title = {
-    "blood_vessel": "Blood Vessel",
-    "glomerulus": "Glomerulus",
-    "unsure": "Unsure",
-    "background": "Background",
-}
-
 
 def generate_mask(img_data, with_background=False, as_id_mask=False):
     if as_id_mask:
@@ -33,10 +26,10 @@ def generate_mask(img_data, with_background=False, as_id_mask=False):
         coordinates = group["coordinates"][0]
         points = np.array(coordinates, dtype=np.int32)
         points = points.reshape((-1, 1, 2))
-        temp = np.zeros((512, 512), dtype=np.uint8)
+        temp = np.zeros((512,512), dtype=np.uint8)
 
         if as_id_mask:
-            cv2.fillPoly(mask[:, :, 0], [points], color=label2id[group["type"]])
+            cv2.fillPoly(mask[:,:,0], [points], color=label2id[group["type"]])
         else:
             cv2.fillPoly(temp, [points], color=(255))
             channel = label2id[group["type"]]
@@ -49,18 +42,16 @@ def generate_mask(img_data, with_background=False, as_id_mask=False):
 
 
 class AbstractDataset(ABC, Dataset):
-    def __init__(
-        self, image_dir, transform=None, with_background=False, as_id_mask=False
-    ):
+    def __init__(self, image_dir, transform=None, with_background=False, as_id_mask=False):
         self.image_dir = image_dir
         self.transform = transform
         self.tiles_dicts = self._load_polygons()
-        self.meta_df = pd.read_csv(Path(image_dir, "tile_meta.csv"))
-        self.with_background = with_background
-        self.as_id_mask = as_id_mask
+        self.meta_df = pd.read_csv(f"{image_dir}/tile_meta.csv")
+        self.with_background=with_background
+        self.as_id_mask=as_id_mask
 
     def _load_polygons(self):
-        with open(Path(self.image_dir, "polygons.jsonl"), "r") as polygons:
+        with open(f"{self.image_dir}/polygons.jsonl", "r") as polygons:
             json_list = list(polygons)
         tiles_dicts = [json.loads(json_str) for json_str in json_list]
         return tiles_dicts
@@ -69,7 +60,7 @@ class AbstractDataset(ABC, Dataset):
         plt.figure(figsize=(10, 10))
 
         img_data = self.tiles_dicts[idx]
-        image_path = Path(self.image_dir, "train", f"{img_data['id']}.tif")
+        image_path = f'{self.image_dir}/train/{img_data["id"]}.tif'
         image = Image.open(image_path)
 
         legend_elements = [
@@ -110,7 +101,7 @@ class AbstractDataset(ABC, Dataset):
             fig, axs = plt.subplots(1, 2, figsize=(15, 5))
             axs[0].imshow(img)
             axs[0].set_title("Image")
-            axs[1].imshow(mask[:, :, 0] * 80, cmap="gray")
+            axs[1].imshow(mask[:, :, 0]*80, cmap="gray")
             axs[1].set_title("id_mask")
         else:
             if self.with_background:
@@ -126,7 +117,7 @@ class AbstractDataset(ABC, Dataset):
             axs[3].imshow(mask[:, :, 2], cmap="gray")
             axs[3].set_title("unsure mask")
             if self.with_background:
-                axs[4].imshow(mask[:, :, 3], cmap="gray")
+                axs[4].imshow(mask[:,:,3], cmap='gray')
                 axs[4].set_title("background mask")
 
         plt.tight_layout()
@@ -134,11 +125,9 @@ class AbstractDataset(ABC, Dataset):
 
     def get(self, idx: int, transform=None):
         img_data = self.tiles_dicts[idx]
-        image_path = Path(self.image_dir, "train", f"{img_data['id']}.tif")
+        image_path = f'{self.image_dir}/train/{img_data["id"]}.tif'
         image = Image.open(image_path)
-        mask = generate_mask(
-            img_data, with_background=self.with_background, as_id_mask=self.as_id_mask
-        )
+        mask = generate_mask(img_data, with_background=self.with_background, as_id_mask=self.as_id_mask)
         if transform:
             image, mask = transform(image, mask)
         return image, mask
@@ -151,7 +140,7 @@ class AbstractDataset(ABC, Dataset):
     def __getitem__(self, index):
         pass
 
-    
+
 # Dataset for all annotated images,
 # index operations return mask in the following format:
 # [mask_idx, h, w] where mask_dix coresponds to:
@@ -159,17 +148,8 @@ class AbstractDataset(ABC, Dataset):
 # mask_idx:1 => glomerulus
 # mask_idx:2 => unsure
 # mask_idx:3 => background
-<<<<<<< HEAD
-# setting the as_id_mask=True will return the mask in this format:
-# [1, h, w] where different pixel values encode the different labels:
-# 0 => blood_vessel
-# 1 =>  glomerulus
-# 3 => background
-=======
 class BaseDataset(AbstractDataset):
-    def __init__(
-        self, image_dir, transform=None, with_background=False, as_id_mask=False
-    ):
+    def __init__(self, image_dir, transform=None, with_background=False, as_id_mask=False):
         super().__init__(image_dir, transform, with_background, as_id_mask)
 
     def __len__(self):
@@ -177,85 +157,65 @@ class BaseDataset(AbstractDataset):
 
     def __getitem__(self, index):
         img_data = self.tiles_dicts[index]
-        image_path = Path(self.image_dir, "train", f"{img_data['id']}.tif")
+        image_path = f'{self.image_dir}/train/{img_data["id"]}.tif'
         image = np.asarray(Image.open(image_path))
-        mask = generate_mask(
-            img_data, with_background=self.with_background, as_id_mask=self.as_id_mask
-        )
+        mask = generate_mask(img_data, with_background=self.with_background, as_id_mask=self.as_id_mask)
 
         if self.transform is not None:
             image, mask = self.transform(image, mask)
 
         return image, mask
+    
 
-
->>>>>>> main
 class TrainTestValBaseDataset(AbstractDataset):
-    def __init__(
-        self,
-        image_dir,
-        sub_dir,
-        transform=None,
-        with_background=False,
-        as_id_mask=False,
-    ):
+    def __init__(self, image_dir, sub_dir, transform=None, with_background=False, as_id_mask=False):
         super().__init__(image_dir, transform, with_background, as_id_mask)
         self.sub_dir = sub_dir
-        self.ids = os.listdir(Path(image_dir, sub_dir))
+        self.ids = os.listdir(image_dir + sub_dir)
         self.id_dict = {}
         for dict in self.tiles_dicts:
             self.id_dict[dict["id"]] = dict
-
     def __len__(self):
         return len(self.ids)
-
+    
     def __getitem__(self, index):
         image_id = self.ids[index]
         img_data = self.id_dict[str(os.path.splitext(image_id)[0])]
-        image_path = Path(self.image_dir, self.sub_dir, image_id)
+        image_path = f'{self.image_dir + self.sub_dir}/{image_id}'
         image = np.asarray(Image.open(image_path))
-        mask = generate_mask(
-            img_data, with_background=self.with_background, as_id_mask=self.as_id_mask
-        )
+        mask = generate_mask(img_data, with_background=self.with_background, as_id_mask=self.as_id_mask)
 
         if self.transform is not None:
             image, mask = self.transform(image, mask)
 
         return image, mask
-
+    
     def get(self, idx: int, transform=None):
         image_id = self.ids[idx]
         img_data = self.id_dict[str(os.path.splitext(image_id)[0])]
-        image_path = Path(self.image_dir, self.sub_dir, image_id)
+        image_path = f'{self.image_dir + self.sub_dir}/{image_id}'
         image = np.asarray(Image.open(image_path))
-        mask = generate_mask(
-            img_data, with_background=self.with_background, as_id_mask=self.as_id_mask
-        )
+        mask = generate_mask(img_data, with_background=self.with_background, as_id_mask=self.as_id_mask)
 
         if transform is not None:
             image, mask = transform(image, mask)
 
         return image, mask
+    
 
-
+    
 class TrainDataset(TrainTestValBaseDataset):
-    def __init__(
-        self, image_dir, transform=None, with_background=False, as_id_mask=False
-    ):
-        super().__init__(image_dir, "train", transform, with_background, as_id_mask)
-
+    def __init__(self, image_dir, transform=None, with_background=False, as_id_mask=False):
+        super().__init__(image_dir, 'train/', transform, with_background, as_id_mask)
 
 class TestDataset(TrainTestValBaseDataset):
     def __init__(self, image_dir, transform=None, with_background=False, as_id_mask=False):
-        super().__init__(image_dir, 'test', transform, with_background, as_id_mask)
-        self.ids.sort()
-
+        super().__init__(image_dir, 'test/', transform, with_background, as_id_mask)
 
 class ValDataset(TrainTestValBaseDataset):
-    def __init__(
-        self, image_dir, transform=None, with_background=False, as_id_mask=False
-    ):
-        super().__init__(image_dir, "val", transform, with_background, as_id_mask)
+    def __init__(self, image_dir, transform=None, with_background=False, as_id_mask=False):
+        super().__init__(image_dir, 'val/', transform, with_background, as_id_mask)
+
 
 
 def _gen_dict_from_json_list(lst):
@@ -282,7 +242,7 @@ class ExpertDataset(AbstractDataset):
 
     def __getitem__(self, index):
         img_data = self.id_map[self.d1_ids[index]]
-        image_path = Path(self.image_dir, "train", f"{img_data['id']}.tif")
+        image_path = f'{self.image_dir}/train/{img_data["id"]}.tif'
         image = np.asarray(Image.open(image_path))
         mask = generate_mask(img_data)
 

@@ -5,9 +5,12 @@ import torch.nn.functional as F
 from hubmap.models.linknet.decoder import Decoder
 from hubmap.models.linknet.encoder import Encoder
 
+<<<<<<< HEAD
+=======
 """
 Source: https://github.com/e-lab/pytorch-linknet
 """
+>>>>>>> main
 
 class LinkNet(nn.Module):
     def __init__(self, num_classes, pretrained=True):

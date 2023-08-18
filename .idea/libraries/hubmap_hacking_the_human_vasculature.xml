@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="hubmap-hacking-the-human-vasculature">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/hubmap/data/hubmap-hacking-the-human-vasculature.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
