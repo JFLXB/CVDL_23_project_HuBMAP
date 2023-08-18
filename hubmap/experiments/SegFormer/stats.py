@@ -92,7 +92,6 @@ class DiceScore:
 # def dice_score(y_true, y_pred):
 #     return (2 * (y_true * y_pred).sum() + 1e-15) / (y_true.sum() + y_pred.sum() + 1e-15)
 
-
 class Jac:
     
     @property
@@ -103,15 +102,14 @@ class Jac:
         self._name = name
     
     def __call__(self, prediction, target):
-        intersection = (target * prediction).sum((-2, -1))
-        union = target.sum((-2, -1)) + prediction.sum((-2, -1)) - intersection
-        jac = (intersection + 1e-15) / (union + 1e-15)
-        return jac[:, BLOOD_VESSEL_CLASS_INDEX]
+        # Isolate the specific class if multi-class segmentation
+        prediction_class = prediction[:, BLOOD_VESSEL_CLASS_INDEX]
+        target_class = target[:, BLOOD_VESSEL_CLASS_INDEX]
         
-        # if self._class_index is not None:
-        #     return jac[:, self._class_index]
-        # else:
-        #     return jac.mean()
+        intersection = (target_class * prediction_class).sum((-2, -1))
+        union = target_class.sum((-2, -1)) + prediction_class.sum((-2, -1)) - intersection
+        jac = (intersection + 1e-15) / (union + 1e-15)
+        return jac
 
 
 class Acc:
@@ -178,13 +176,14 @@ def calculate_statistics(model, device, val_set, val_loader, metrics):
 
 
 def print_statistics(results, metrics, title):
-    mean_results = results.mean(dim=1).numpy()
-    var_results = results.var(dim=1).numpy()
-    std_results = results.std(dim=1).numpy()
+    mean_results = results.mean(dim=0).numpy()
+    var_results = results.var(dim=0).numpy()
+    std_results = results.std(dim=0).numpy()
 
     metric_names = [metric.name for metric in metrics]
     print("-----------------------------------")
     print(title)
+
     for i, metric_name in enumerate(metric_names):
         print(f"\t{metric_name}: {mean_results[i]:.4f}% | "
             f"± {std_results[i]:.4f} (std) | "
