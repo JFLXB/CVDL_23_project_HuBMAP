@@ -1,3 +1,8 @@
+"""
+Sources: 
+ - https://github.com/Thanos-DB/FullyConvolutionalTransformer
+ - https://openaccess.thecvf.com/content/WACV2023/papers/Tragakis_The_Fully_Convolutional_Transformer_for_Medical_Image_Segmentation_WACV_2023_paper.pdf
+"""
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
@@ -8,12 +13,14 @@ from hubmap.models.fct.blocks import DS_out
 
 class FCT(nn.Module):
     def __init__(self, in_channels: int, num_classes: int, verbose: bool = False):
+        # Added additional parameters to work with our task at hand.
+        # Changed the following code and dependencies accordingly.
         super().__init__()
         self._verbose = verbose
 
         # attention heads and filters per block
-        # att_heads = [2, 2, 2, 2, 2, 2, 2, 2, 2]  # Not used in the paper
-        att_heads = [2, 4, 8, 16, 32, 16, 8, 4, 2]  # Given in the paper
+        # Changes according to the specification given in the paper
+        att_heads = [2, 4, 8, 16, 32, 16, 8, 4, 2] 
         filters = [16, 32, 64, 128, 384, 128, 64, 32, 16]
 
         # number of blocks used in the model
@@ -26,14 +33,8 @@ class FCT(nn.Module):
 
         self.drp_out = 0.3
 
-        # shape
-        # init_sizes = torch.ones((2,224,224,1))
-        # init_sizes = init_sizes.permute(0, 3, 1, 2)
-
         # Multi-scale input
         self.scale_img = nn.AvgPool2d(2, 2)
-
-        # blk, in_channels, out_channels, att_heads, dpr, image_in_channels):
 
         # model
         self.block_1 = Block_encoder_bottleneck(
@@ -98,12 +99,5 @@ class FCT(nn.Module):
         print(f"DS 8 out -> {list(out8.size())}") if self._verbose else None
         out9 = self.ds9(skip9)
         print(f"DS 9 out -> {list(out9.size())}") if self._verbose else None
-
-        # out7 = F.softmax(out7, dim=1)
-        # out8 = F.softmax(out8, dim=1)
-        # out9 = F.softmax(out9, dim=1)
-        # out7 = F.sigmoid(out7)
-        # out8 = F.sigmoid(out8)
-        # out9 = F.sigmoid(out9)
 
         return out7, out8, out9

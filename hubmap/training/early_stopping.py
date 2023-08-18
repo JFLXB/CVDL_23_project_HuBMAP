@@ -1,6 +1,5 @@
 """
-Code copied from:
-https://debuggercafe.com/using-learning-rate-scheduler-and-early-stopping-with-pytorch/
+Source: https://debuggercafe.com/using-learning-rate-scheduler-and-early-stopping-with-pytorch/
 """
 from tqdm.auto import tqdm
 

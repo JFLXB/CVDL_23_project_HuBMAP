@@ -1,6 +1,5 @@
 from PIL import Image
 from torch.utils.data import Dataset
-import torchvision.transforms as T
 import numpy as np
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt

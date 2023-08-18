@@ -1,3 +1,8 @@
+"""
+Sources: 
+ - https://github.com/Thanos-DB/FullyConvolutionalTransformer
+ - https://openaccess.thecvf.com/content/WACV2023/papers/Tragakis_The_Fully_Convolutional_Transformer_for_Medical_Image_Segmentation_WACV_2023_paper.pdf
+"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -113,7 +118,6 @@ class Attention(nn.Module):
 class Transformer(nn.Module):
     def __init__(
         self,
-        # in_channels,
         out_channels,
         num_heads,
         dpr,
@@ -271,9 +275,7 @@ class DS_out(nn.Module):
         x1 = x1.permute(0, 3, 1, 2)
         x1 = F.relu(self.conv1(x1))
         x1 = F.relu(self.conv2(x1))
-        # out = torch.sigmoid(self.conv3(x1))
-        # return out
-        # TODO: changed from the original....
         x1 = self.conv3(x1)
-        # print(x1.min(), x1.max())
+        # Above was changed from the original implementation:
+        #   out = torch.sigmoid(self.conv3(x1))
         return x1

@@ -13,8 +13,6 @@ def visualize_checkpoint(checkpoint_name: str):
     plt.style.use(["science"])
     checkpoint = torch.load(Path(CHECKPOINT_DIR / checkpoint_name))
 
-    # epoch = checkpoint["epoch"] + 1
-    # start_epoch = checkpoint.get("start_epoch", 1)
     training_loss_history = checkpoint["training_loss_history"]
     training_metric_history = checkpoint["training__history"]
     validation_loss_history = checkpoint["validation_loss_history"]
