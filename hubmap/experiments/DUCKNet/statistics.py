@@ -7,8 +7,8 @@ from checkpoints import CHECKPOINT_DIR
 from configs import CONFIG_DIR
 from hubmap.data import DATA_DIR
 from hubmap.dataset import transforms as T
-from hubmap.dataset import ValDataset, TrainDataset
-from hubmap.models import DUCKNet, DUCKNetPretrained
+from hubmap.dataset import ValDataset, TrainDataset, TestDataset
+from hubmap.models import DUCKNet, DUCKNetPretrained, DUCKNetPretrained34
 from hubmap.experiments.DUCKNet.utils import train, DiceLoss
 
 BLOOD_VESSEL_CLASS_INDEX = 0
@@ -180,23 +180,20 @@ def calculate_statistics(model, device, val_set, val_loader, metrics):
 
 
 def print_statistics(results, metrics, title):
-    mean_results = results.mean(dim=1).numpy()
-    var_results = results.var(dim=1).numpy()
-    std_results = results.std(dim=1).numpy()
+    mean_results = results.mean(dim=0).numpy()
+    var_results = results.var(dim=0).numpy()
+    std_results = results.std(dim=0).numpy()
 
     metric_names = [metric.name for metric in metrics]
     print("-----------------------------------")
     print(title)
     for i, metric_name in enumerate(metric_names):
-        print(f"\t{metric_name}: {mean_results[i]:.4f} | "
-            f"± {std_results[i]:.4f} (std) | "
-            f"± {var_results[i]:.4f} (var)"
-            )
+        print(f"\t{metric_name}: {mean_results[i]:.4f}")
     print("-----------------------------------")
 
 
 if __name__ == "__main__":
-    for file in Path(CONFIG_DIR, "DUCKNet").glob('*'):
+    for file in Path(CONFIG_DIR, "DUCKNet_final_test").glob('*'):
         print(f"Loading model in file: {file.stem}")
 
         data = torch.load(file)
@@ -205,12 +202,20 @@ if __name__ == "__main__":
         # pretrained = data["pretrained"]
         image_size = data["image_size"]
         
+
+        
         if model_name == "DUCKNet":
             model = DUCKNet(input_channels=3, out_classes=4, starting_filters=32)
         elif model_name == "DUCKNetPretrained":
             model = DUCKNetPretrained(input_channels=3, out_classes=4)
+        elif model_name == "DUCKNetPretrained34":
+            model = DUCKNetPretrained34(input_channels=3, out_classes=4)
         else:
             raise ValueError(f"Unknown model name: {model_name}")
+        
+        #also cover ducknet with resnet34 backbone when model name is not saved
+        if 'pretrained34' in str(data['checkpoint_name']):
+            model = DUCKNetPretrained34(input_channels=3, out_classes=4)
 
         print("checkpoint name: ", data["checkpoint_name"])
         model_ckpt = torch.load(Path(CHECKPOINT_DIR / data["checkpoint_name"]))
@@ -221,13 +226,13 @@ if __name__ == "__main__":
         train_transforms = T.Compose(
             [
                 T.ToTensor(),
-                T.Resize((48, 48)),
+                T.Resize((64, 64)),
             ]
         )
         val_transforms = T.Compose(
             [
                 T.ToTensor(),
-                T.Resize((48, 48)),
+                T.Resize((64, 64)),
             ]
         )
         train_set = TrainDataset(DATA_DIR, transform=train_transforms, with_background=True)
@@ -257,7 +262,9 @@ if __name__ == "__main__":
                 T.ToTensor(),
                 T.Resize((image_size, image_size)),
         ])
-        val_set = ValDataset(DATA_DIR, transform=val_transforms, with_background=True)
+        # val_set = ValDataset(DATA_DIR, transform=val_transforms, with_background=True)
+        # val_loader = DataLoader(val_set, batch_size=1, shuffle=False)
+        val_set = TestDataset(DATA_DIR, transform=val_transforms, with_background=True)
         val_loader = DataLoader(val_set, batch_size=1, shuffle=False)
         metrics = [Precision(), Recall(), F1(), F2(), DiceScore(), Jac(), Acc(), Confidence()]
         

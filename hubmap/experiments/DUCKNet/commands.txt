@@ -2,6 +2,8 @@
 Done: with lr=1e-3, without scheduler
 python ./hubmap/experiments/DUCKNet/train.py --name ducknet_dice_128_20 --epochs 20 --img-size 128 --model DUCKNet --loss DiceLoss
 python ./hubmap/experiments/DUCKNet/train.py --name ducknet_diceBCE_128_20 --epochs 20 --img-size 128 --model DUCKNet --loss DiceBCELoss
+python ./hubmap/experiments/DUCKNet/train.py --name ducknet_crossEntropy_128_20 --epochs 20 --img-size 128 --model DUCKNet --loss CrossEntropyLoss
+
 
 python ./hubmap/experiments/DUCKNet/train.py --name ducknet_pretrained_dice_128_20 --epochs 20 --img-size 128 --model DUCKNetPretrained --loss DiceLoss
 python ./hubmap/experiments/DUCKNet/train.py --name ducknet_pretrained_diceBCE_128_20 --epochs 20 --img-size 128 --model DUCKNetPretrained --loss DiceBCELoss
@@ -14,12 +16,19 @@ python ./hubmap/experiments/DUCKNet/train.py --name ducknet_pretrained_cross_ent
 
 
 
+python ./hubmap/experiments/DUCKNet/train.py --name ducknet_pretrained_channel_weight_bce_dice_256_20 --epochs 20 --img-size 256 --model DUCKNetPretrained --loss ChannelWeightedDiceBCELoss
+
+python ./hubmap/experiments/DUCKNet/train.py --name ducknet_pretrained34_channel_weight_bce_dice_128_20 --epochs 20 --img-size 128 --model DUCKNetPretrained34 --loss ChannelWeightedDiceBCELoss
+python ./hubmap/experiments/DUCKNet/train.py --name ducknet_pretrained34_dice_128_20 --epochs 20 --img-size 128 --model DUCKNetPretrained34 --loss DiceLoss
+
+python ./hubmap/experiments/DUCKNet/train.py --name ducknet_pretrained_channel_weight_bce_dice_256_20 --epochs 20 --img-size 256 --model DUCKNetPretrained --loss ChannelWeightedDiceBCELoss
+
+python ./hubmap/experiments/DUCKNet/train.py --name ducknet_channel_weight_bce_dice_128_20 --epochs 20 --img-size 128 --model DUCKNet --loss ChannelWeightedDiceBCELoss
 
 
+python ./hubmap/experiments/DUCKNet/train.py --name ducknet_pretrained34_channel_weight_bce_dice_128_20 --epochs 20 --img-size 128 --model DUCKNetPretrained34 --loss ChannelWeightedDiceBCELoss
 
-
-
-
+python ./hubmap/experiments/DUCKNet/train.py --name ducknet_pretrained_dice_128_20_lr_1e4 --epochs 20 --img-size 128 --model DUCKNetPretrained --loss DiceLoss
 
 
 Recap:

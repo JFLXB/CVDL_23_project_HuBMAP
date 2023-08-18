@@ -22,7 +22,7 @@ from hubmap.training import EarlyStopping
 
 from hubmap.visualization import visualize_result
 
-from hubmap.models.ducknet import DUCKNet, DUCKNetPretrained
+from hubmap.models.ducknet import DUCKNet, DUCKNetPretrained, DUCKNetPretrained34
 
 
 parser = argparse.ArgumentParser()
@@ -71,6 +71,10 @@ elif args.model == "DUCKNetPretrained":
     MODEL = DUCKNetPretrained
     IMG_SIZE = args.img_size
     PRETRAINED = True
+elif args.model == "DUCKNetPretrained34":
+    MODEL = DUCKNetPretrained34
+    IMG_SIZE = args.img_size
+    PRETRAINED = True
 else:
     raise ValueError(f"Unknown model {args.model}")
 
@@ -83,7 +87,7 @@ elif args.loss == "DiceLoss":
     LOSS = DiceLoss
 elif args.loss == "ChannelWeightedDiceBCELoss":
     LOSS = ChannelWeightedDiceBCELoss
-    WEIGHT = torch.tensor(args.weights)
+    WEIGHT = torch.tensor([1.2753886168323578, 1.2737381309347808, 1.3285854321630461, 0.12228782006981492])
 elif args.loss == "CrossEntropyLoss":
     LOSS = nn.CrossEntropyLoss
 # elif args.loss == "FocalLoss":
@@ -110,7 +114,7 @@ NUM_EPOCHS = args.epochs
 # BACKBONE = args.backbone 
 # PRETRAINED = args.pretrained
 
-LR = 1e-3
+LR = 1e-4
 CONTINUE_TRAINING = args.continue_training
 FROM_CHECKPOINT = args.from_checkpoint
 
@@ -171,6 +175,8 @@ if args.model == "DUCKNet":
     model = DUCKNet(input_channels=3, out_classes=4, starting_filters=STARTING_FILTERS).to(device)
 elif args.model == "DUCKNetPretrained":
     model = DUCKNetPretrained(input_channels=3, out_classes=4).to(device)
+elif args.model == "DUCKNetPretrained34":
+    model = DUCKNetPretrained34(input_channels=3, out_classes=4).to(device)
 else:
     raise ValueError(f"Unknown model {args.model}")
 
