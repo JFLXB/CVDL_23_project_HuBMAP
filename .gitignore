@@ -1,3 +1,5 @@
+*.png
+poetry.lock
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -158,5 +160,21 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
+hubmap/data/test/**/*
+hubmap/data/train/**/*
+hubmap/data/hubmap-hacking-the-human-vasculature.zip
+hubmap/data/polygons.jsonl
+hubmap/data/sample_submission.csv
+hubmap/data/tile_meta.csv
+hubmap/data/wsi_meta.csv
+hubmap/experiments/checkpoints/**/*
 
-poetry.lock
+checkpoints/*
+checkpoints/*/**
+figures/*
+figures/*/**
+!figures/visualization.ipynb
+
+# Custom for @jonas
+metric.ipynb
+tmp2.ipynb
