@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
-import Transforms as tr
+import transforms as tr
 from torchvision import transforms
 
 
@@ -64,6 +64,3 @@ visualize_transformation(hue_sat, "HueSat")
 gamma = tr.RandomGamma()
 visualize_transformation(gamma, "Gamma")
 
-# TODO: doenst work idk why
-# rotate = tr.RandomRotate90(1)
-# visualize_transformation(rotate, "RandomRotate90")

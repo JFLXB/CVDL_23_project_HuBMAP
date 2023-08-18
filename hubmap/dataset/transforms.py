@@ -15,7 +15,6 @@ class Compose:
         self.transforms = transforms
 
     def __call__(self, image, mask):
-        # assert image.size == mask.size
         for t in self.transforms:
             image, mask = t(image, mask)
         return image, mask
@@ -67,21 +66,8 @@ class RandomCrop:
         return image, target
 
 
-class RandomRotate90:
-    # TODO: this is not working properly
-    def __init__(self, p=0.5):
-        self.p = p
-
-    def __call__(self, image, mask):
-        if random.random() < self.p:
-            turns = random.choice([0, 1, 2, 3])
-            image = image.rotate(90 * turns)
-            mask = mask.rotate(90 * turns)
-        return image, mask
-
-
 class RandomHueSaturationValue:
-    def __init__(self, hue_shift=(-0.5, 0.5), sat_shift=(0, 2), val_shift=(0.5, 2)):
+    def __init__(self, hue_shift=(-0.05, 0.05), sat_shift=(0.8, 1.2), val_shift=(0.8, 1.2)):
         self.hue_shift = hue_shift
         self.sat_shift = sat_shift
         self.val_shift = val_shift
