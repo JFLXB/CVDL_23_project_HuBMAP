@@ -4,7 +4,9 @@ from torchvision.models import resnet18
 import torch.nn.functional as F
 from hubmap.models.ducknet.convblock2d import ConvBlock2D
 
-
+"""
+Adapted from: https://github.com/RazvanDu/DUCK-Net
+"""
 
 
 class DUCKNet(nn.Module):
