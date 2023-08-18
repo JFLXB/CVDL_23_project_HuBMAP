@@ -167,14 +167,3 @@ hubmap/data/polygons.jsonl
 hubmap/data/sample_submission.csv
 hubmap/data/tile_meta.csv
 hubmap/data/wsi_meta.csv
-hubmap/experiments/checkpoints/**/*
-
-checkpoints/*
-checkpoints/*/**
-figures/*
-figures/*/**
-!figures/visualization.ipynb
-
-# Custom for @jonas
-metric.ipynb
-tmp2.ipynb
